@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'onboarding2.dart';
+import 'package:kreative_kindle/screens/Onboarding/onboarding2.dart';
 
 class OnboardingScreen1 extends StatelessWidget {
   const OnboardingScreen1({super.key});
