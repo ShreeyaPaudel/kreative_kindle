@@ -9,7 +9,7 @@ class KreativeKindleApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: "KreativeKindle",
-      theme: ThemeData(fontFamily: 'Poppins'),
+      theme: ThemeData(fontFamily: 'Roboto'),
       home: const SplashScreen(),
     );
   }
