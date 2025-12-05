@@ -28,7 +28,7 @@ class OnboardingScreen2 extends StatelessWidget {
                 left: 20,
                 child: Image.asset(
                   "assets/illustrations/Onboarding/top_left.png",
-                  height: 55,
+                  height: 25,
                 ),
               ),
 

@@ -1,30 +1,36 @@
 import 'package:flutter/material.dart';
-import 'signup_screen.dart';
+import '../../Parent/Dashboard/parent_dashboard.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+import 'login_screen.dart';
+import '../../Role/user_role.dart';
+
+class SignupScreen extends StatefulWidget {
+  const SignupScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _SignupScreenState extends State<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
 
   bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
+  final TextEditingController fullNameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
+  final TextEditingController addressController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // 🔵 BLUE BACKGROUND + TOP IMAGE (IDENTICAL TO SIGNUP)
             Stack(
               children: [
                 SizedBox(
@@ -35,7 +41,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     fit: BoxFit.cover,
                   ),
                 ),
-
                 Positioned(
                   bottom: 0,
                   left: 0,
@@ -50,20 +55,19 @@ class _LoginScreenState extends State<LoginScreen> {
               ],
             ),
 
-            // ⚪ WHITE CONTENT AREA (EXACT SAME AS SIGNUP)
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 20),
-              decoration: const BoxDecoration(color: Colors.white),
-
               child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      "Welcome Back!",
-                      style: TextStyle(
+                    Text(
+                      UserRole.role == "parent"
+                          ? "Hi Parent!"
+                          : "Hi Instructor!",
+                      style: const TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w700,
                         color: Colors.black87,
@@ -73,28 +77,51 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 4),
 
                     const Text(
-                      "Login to continue",
+                      "Sign Up Now!",
                       style: TextStyle(fontSize: 15, color: Colors.black54),
                     ),
 
                     const SizedBox(height: 25),
 
-                    // EMAIL OR MOBILE
+                    // FULL NAME
+                    TextFormField(
+                      controller: fullNameController,
+                      decoration: const InputDecoration(
+                        labelText: "Full Name",
+                        border: UnderlineInputBorder(),
+                      ),
+                      validator: (value) =>
+                          value!.isEmpty ? "Full name required" : null,
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // EMAIL
                     TextFormField(
                       controller: emailController,
+                      keyboardType: TextInputType.emailAddress,
                       decoration: const InputDecoration(
                         labelText: "Mobile Number/Email",
                         border: UnderlineInputBorder(),
                       ),
                       validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "This field is required";
-                        }
-                        if (!value.contains("@") && value.length < 7) {
-                          return "Enter valid email or phone number";
-                        }
+                        if (value!.isEmpty) return "Email required";
+                        if (!value.contains("@")) return "Enter a valid email";
                         return null;
                       },
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // ADDRESS
+                    TextFormField(
+                      controller: addressController,
+                      decoration: const InputDecoration(
+                        labelText: "Address",
+                        border: UnderlineInputBorder(),
+                      ),
+                      validator: (value) =>
+                          value!.isEmpty ? "Address required" : null,
                     ),
 
                     const SizedBox(height: 14),
@@ -120,29 +147,54 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "Password required";
+                        if (value!.isEmpty) return "Password required";
+                        if (value.length < 8) {
+                          return "Password must be at least 8 characters";
+                        }
+                        if (!RegExp(r'[A-Z]').hasMatch(value)) {
+                          return "Must include 1 uppercase letter";
+                        }
+                        if (!RegExp(r'[0-9]').hasMatch(value)) {
+                          return "Must include 1 number";
                         }
                         return null;
                       },
                     ),
 
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 14),
 
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Text(
-                        "Forgot Password?",
-                        style: TextStyle(
-                          color: Colors.grey.shade700,
-                          fontWeight: FontWeight.w500,
+                    // CONFIRM PASSWORD
+                    TextFormField(
+                      controller: confirmPasswordController,
+                      obscureText: _obscureConfirmPassword,
+                      decoration: InputDecoration(
+                        labelText: "Confirm Password",
+                        border: const UnderlineInputBorder(),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscureConfirmPassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscureConfirmPassword =
+                                  !_obscureConfirmPassword;
+                            });
+                          },
                         ),
                       ),
+                      validator: (value) {
+                        if (value != passwordController.text) {
+                          return "Passwords do not match";
+                        }
+                        return null;
+                      },
                     ),
 
                     const SizedBox(height: 25),
 
-                    // 🌈 GRADIENT LOGIN BUTTON (IDENTICAL TO SIGNUP)
+                    // SIGN UP BUTTON → NAVIGATE
                     Center(
                       child: Container(
                         decoration: BoxDecoration(
@@ -153,8 +205,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               Color(0xFFFFCFA8),
                               Color(0xFFFFB88A),
                             ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
                           ),
                         ),
                         child: ElevatedButton(
@@ -166,21 +216,21 @@ class _LoginScreenState extends State<LoginScreen> {
                             backgroundColor: Colors.transparent,
                             shadowColor: Colors.transparent,
                             elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
                           ),
                           onPressed: () {
                             if (_formKey.currentState!.validate()) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text("Login Successful!"),
-                                ),
-                              );
+                              if (UserRole.role == "parent") {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const ParentDashboard(),
+                                  ),
+                                );
+                              }
                             }
                           },
                           child: const Text(
-                            "Login",
+                            "Sign Up",
                             style: TextStyle(
                               color: Colors.black87,
                               fontSize: 15,
@@ -193,19 +243,19 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 15),
 
-                    // SWITCH TO SIGNUP
+                    // LOGIN REDIRECT
                     Center(
                       child: GestureDetector(
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const SignupScreen(),
+                              builder: (_) => const LoginScreen(),
                             ),
                           );
                         },
                         child: const Text(
-                          "Don't have an account? Sign Up",
+                          "Already have an account? Login",
                           style: TextStyle(fontSize: 14, color: Colors.black87),
                         ),
                       ),

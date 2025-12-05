@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/Splash/splash_screen.dart';
+import 'screens/Parent_Instructor/Splash/splash_screen.dart';
 
 class KreativeKindleApp extends StatelessWidget {
   const KreativeKindleApp({Key? key}) : super(key: key);

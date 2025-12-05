@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:kreative_kindle/screens/Onboarding/onboarding2.dart';
+import 'package:kreative_kindle/screens/Parent_Instructor/Onboarding/onboarding2.dart';
 
 class OnboardingScreen1 extends StatelessWidget {
   const OnboardingScreen1({super.key});
@@ -24,7 +24,7 @@ class OnboardingScreen1 extends StatelessWidget {
             children: [
               Image.asset("assets/images/onboarding1.png", height: 260),
 
-              const SizedBox(height: 25),
+              const SizedBox(height: 35),
 
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 40),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../Auth/signup_screen.dart'; // <-- your register screen
+import '../../Role/select_role.dart';
 import 'onboarding2.dart';
 
 class OnboardingScreen3 extends StatelessWidget {
@@ -10,13 +10,13 @@ class OnboardingScreen3 extends StatelessWidget {
     return GestureDetector(
       onHorizontalDragEnd: (details) {
         if (details.primaryVelocity! > 0) {
-          Navigator.pop(context); // swipe RIGHT → back to page 2
+          Navigator.pop(context);
         }
         if (details.primaryVelocity! < 0) {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => const SignupScreen()),
-          ); // swipe LEFT → go to register
+            MaterialPageRoute(builder: (_) => const SelectRoleScreen()),
+          );
         }
       },
       child: Scaffold(
@@ -25,7 +25,6 @@ class OnboardingScreen3 extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // MAIN ILLUSTRATION
               Image.asset(
                 "assets/illustrations/Onboarding/page3.png",
                 height: 260,
@@ -33,7 +32,6 @@ class OnboardingScreen3 extends StatelessWidget {
 
               const SizedBox(height: 20),
 
-              // TITLE
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 35),
                 child: Text(
@@ -50,7 +48,6 @@ class OnboardingScreen3 extends StatelessWidget {
 
               const SizedBox(height: 14),
 
-              // SUBTITLE
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 40),
                 child: Text(
@@ -66,15 +63,14 @@ class OnboardingScreen3 extends StatelessWidget {
 
               const SizedBox(height: 35),
 
-              // DOTS
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
                     width: 8,
                     height: 8,
-                    decoration: BoxDecoration(
-                      color: const Color.fromARGB(66, 127, 212, 240),
+                    decoration: const BoxDecoration(
+                      color: Color.fromARGB(66, 127, 212, 240),
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -82,8 +78,8 @@ class OnboardingScreen3 extends StatelessWidget {
                   Container(
                     width: 8,
                     height: 8,
-                    decoration: BoxDecoration(
-                      color: const Color.fromARGB(66, 127, 212, 240),
+                    decoration: const BoxDecoration(
+                      color: Color.fromARGB(66, 127, 212, 240),
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -92,7 +88,7 @@ class OnboardingScreen3 extends StatelessWidget {
                     width: 20,
                     height: 8,
                     decoration: BoxDecoration(
-                      color: const Color.fromARGB(255, 62, 187, 219),
+                      color: Color.fromARGB(255, 62, 187, 219),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
