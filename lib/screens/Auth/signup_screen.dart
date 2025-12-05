@@ -29,7 +29,6 @@ class _SignupScreenState extends State<SignupScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // 🔵 TOP BLUE BACKGROUND + ILLUSTRATION
             Stack(
               children: [
                 // Blue bg
