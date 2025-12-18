@@ -66,10 +66,18 @@ flutter:
 
   # fonts:
   # - family: Poppins
-  #   fonts:
-  #     - asset: assets/fonts/Poppins-Regular.ttf
-  #     - asset: assets/fonts/Poppins-Medium.ttf
-  #     - asset: assets/fonts/Poppins-SemiBold.ttf
+  fonts:
+    - family: OpenSans Bold
+      fonts:
+        - asset: assets/fonts/OpenSans-Bold.ttf
+
+    - family: OpenSans Light
+      fonts:
+        - asset: assets/fonts/OpenSans-Light.ttf
+
+    - family: OpenSans Regular
+      fonts:
+        - asset: assets/fonts/OpenSans-Regular.ttf
 
 
 

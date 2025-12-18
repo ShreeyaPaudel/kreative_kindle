@@ -9,7 +9,7 @@ class ParentDashboard extends StatefulWidget {
 }
 
 class _ParentDashboardState extends State<ParentDashboard> {
-  int index = 2; // Home in middle
+  int index = 2;
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +20,6 @@ class _ParentDashboardState extends State<ParentDashboard> {
           ? SingleChildScrollView(
               child: Column(
                 children: [
-                  // ===== TOP GRADIENT HEADER =====
                   Stack(
                     children: [
                       Container(
@@ -105,7 +104,6 @@ class _ParentDashboardState extends State<ParentDashboard> {
 
                   const SizedBox(height: 20),
 
-                  // ===== TODAY'S HIGHLIGHT =====
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 20),
                     padding: const EdgeInsets.all(18),
@@ -160,7 +158,6 @@ class _ParentDashboardState extends State<ParentDashboard> {
 
                   const SizedBox(height: 25),
 
-                  // ===== ALL FEATURE CARDS (RESTORED) =====
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: GridView.count(
@@ -189,7 +186,6 @@ class _ParentDashboardState extends State<ParentDashboard> {
 
                   const SizedBox(height: 30),
 
-                  // ===== RECOMMENDED SECTION =====
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Padding(
@@ -258,7 +254,6 @@ class _ParentDashboardState extends State<ParentDashboard> {
               ),
             ),
 
-      // ===== THEME MATCHED BOTTOM NAV =====
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           boxShadow: [
