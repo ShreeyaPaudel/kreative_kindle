@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kreative_kindle/screens/Parent/Dashboard/parent_dashboard.dart';
 import 'screens/Parent_Instructor/Splash/splash_screen.dart';
 
 class KreativeKindleApp extends StatelessWidget {
@@ -10,7 +11,7 @@ class KreativeKindleApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: "KreativeKindle",
       theme: ThemeData(fontFamily: 'Roboto'),
-      home: const SplashScreen(),
+      home: const ParentDashboard(),
     );
   }
 }
