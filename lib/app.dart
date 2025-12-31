@@ -13,7 +13,7 @@ class KreativeKindleApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: "KreativeKindle",
       theme: getApplicationTheme(),
-      home: const LoginScreen(),
+      home: const ParentDashboard(),
     );
   }
 }
