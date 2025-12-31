@@ -2,29 +2,30 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/datasources/auth_local_datasource.dart';
 import '../../data/repositories/auth_repository_impl.dart';
-import '../../domain/usecases/signup_usecase.dart';
 import '../../domain/usecases/login_usecase.dart';
+import '../../domain/usecases/signup_usecase.dart';
 
+/// PROVIDER
 final authViewModelProvider = StateNotifierProvider<AuthViewModel, bool>((ref) {
-  // 1️⃣ datasource
   final datasource = AuthLocalDatasource();
-
-  // 2️⃣ repository
   final repository = AuthRepositoryImpl(datasource);
 
-  // 3️⃣ usecases
   final signupUseCase = SignupUseCase(repository);
   final loginUseCase = LoginUseCase(repository);
 
-  // 4️⃣ viewmodel
-  return AuthViewModel(signupUseCase, loginUseCase);
+  return AuthViewModel(
+    signupUseCase: signupUseCase,
+    loginUseCase: loginUseCase,
+  );
 });
 
+/// VIEWMODEL
 class AuthViewModel extends StateNotifier<bool> {
   final SignupUseCase signupUseCase;
   final LoginUseCase loginUseCase;
 
-  AuthViewModel(this.signupUseCase, this.loginUseCase) : super(false);
+  AuthViewModel({required this.signupUseCase, required this.loginUseCase})
+    : super(false);
 
   Future<void> signup(String email, String password) async {
     await signupUseCase(email, password);
