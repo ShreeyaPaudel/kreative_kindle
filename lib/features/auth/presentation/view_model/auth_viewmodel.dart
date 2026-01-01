@@ -5,34 +5,31 @@ import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/signup_usecase.dart';
 
-/// PROVIDER
-final authViewModelProvider = StateNotifierProvider<AuthViewModel, bool>((ref) {
-  final datasource = AuthLocalDatasource();
-  final repository = AuthRepositoryImpl(datasource);
+final authViewModelProvider = NotifierProvider<AuthViewModel, bool>(
+  AuthViewModel.new,
+);
 
-  final signupUseCase = SignupUseCase(repository);
-  final loginUseCase = LoginUseCase(repository);
+class AuthViewModel extends Notifier<bool> {
+  late SignupUseCase _signupUseCase;
+  late LoginUseCase _loginUseCase;
 
-  return AuthViewModel(
-    signupUseCase: signupUseCase,
-    loginUseCase: loginUseCase,
-  );
-});
+  @override
+  bool build() {
+    final datasource = AuthLocalDatasource();
+    final repository = AuthRepositoryImpl(datasource);
 
-/// VIEWMODEL
-class AuthViewModel extends StateNotifier<bool> {
-  final SignupUseCase signupUseCase;
-  final LoginUseCase loginUseCase;
+    _signupUseCase = SignupUseCase(repository);
+    _loginUseCase = LoginUseCase(repository);
 
-  AuthViewModel({required this.signupUseCase, required this.loginUseCase})
-    : super(false);
+    return false; // initial login state
+  }
 
   Future<void> signup(String email, String password) async {
-    await signupUseCase(email, password);
+    await _signupUseCase(email, password);
   }
 
   Future<bool> login(String email, String password) async {
-    final success = await loginUseCase(email, password);
+    final success = await _loginUseCase(email, password);
     state = success;
     return success;
   }

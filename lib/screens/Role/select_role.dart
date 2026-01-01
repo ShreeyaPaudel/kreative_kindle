@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../Parent_Instructor/Auth/signup_screen.dart';
+import '../../features/auth/presentation/pages/signup_screen.dart';
 import 'user_role.dart';
 
 class SelectRoleScreen extends StatelessWidget {

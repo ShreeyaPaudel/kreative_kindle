@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
-import '../../Parent/Dashboard/parent_dashboard.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../screens/Parent/Dashboard/parent_dashboard.dart';
+import '../../../../screens/Role/user_role.dart';
+import '../view_model/auth_viewmodel.dart';
 import 'login_screen.dart';
-import '../../Role/user_role.dart';
 
-class SignupScreen extends StatefulWidget {
+class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
 
   @override
-  State<SignupScreen> createState() => _SignupScreenState();
+  ConsumerState<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _SignupScreenState extends State<SignupScreen> {
+class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
 
   bool _obscurePassword = true;
@@ -31,6 +33,7 @@ class _SignupScreenState extends State<SignupScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
+            // TOP IMAGE
             Stack(
               children: [
                 SizedBox(
@@ -55,8 +58,7 @@ class _SignupScreenState extends State<SignupScreen> {
               ],
             ),
 
-            Container(
-              width: double.infinity,
+            Padding(
               padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 20),
               child: Form(
                 key: _formKey,
@@ -70,15 +72,13 @@ class _SignupScreenState extends State<SignupScreen> {
                       style: const TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w700,
-                        color: Colors.black87,
                       ),
                     ),
 
-                    const SizedBox(height: 4),
-
+                    const SizedBox(height: 5),
                     const Text(
                       "Sign Up Now!",
-                      style: TextStyle(fontSize: 15, color: Colors.black54),
+                      style: TextStyle(color: Colors.black54),
                     ),
 
                     const SizedBox(height: 25),
@@ -90,8 +90,8 @@ class _SignupScreenState extends State<SignupScreen> {
                         labelText: "Full Name",
                         border: UnderlineInputBorder(),
                       ),
-                      validator: (value) =>
-                          value!.isEmpty ? "Full name required" : null,
+                      validator: (v) =>
+                          v!.isEmpty ? "Full name required" : null,
                     ),
 
                     const SizedBox(height: 14),
@@ -101,12 +101,12 @@ class _SignupScreenState extends State<SignupScreen> {
                       controller: emailController,
                       keyboardType: TextInputType.emailAddress,
                       decoration: const InputDecoration(
-                        labelText: "Mobile Number/Email",
+                        labelText: "Email",
                         border: UnderlineInputBorder(),
                       ),
-                      validator: (value) {
-                        if (value!.isEmpty) return "Email required";
-                        if (!value.contains("@")) return "Enter a valid email";
+                      validator: (v) {
+                        if (v!.isEmpty) return "Email required";
+                        if (!v.contains("@")) return "Enter valid email";
                         return null;
                       },
                     ),
@@ -120,8 +120,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         labelText: "Address",
                         border: UnderlineInputBorder(),
                       ),
-                      validator: (value) =>
-                          value!.isEmpty ? "Address required" : null,
+                      validator: (v) => v!.isEmpty ? "Address required" : null,
                     ),
 
                     const SizedBox(height: 14),
@@ -146,17 +145,9 @@ class _SignupScreenState extends State<SignupScreen> {
                           },
                         ),
                       ),
-                      validator: (value) {
-                        if (value!.isEmpty) return "Password required";
-                        if (value.length < 8) {
-                          return "Password must be at least 8 characters";
-                        }
-                        if (!RegExp(r'[A-Z]').hasMatch(value)) {
-                          return "Must include 1 uppercase letter";
-                        }
-                        if (!RegExp(r'[0-9]').hasMatch(value)) {
-                          return "Must include 1 number";
-                        }
+                      validator: (v) {
+                        if (v!.isEmpty) return "Password required";
+                        if (v.length < 8) return "Min 8 characters";
                         return null;
                       },
                     ),
@@ -184,8 +175,8 @@ class _SignupScreenState extends State<SignupScreen> {
                           },
                         ),
                       ),
-                      validator: (value) {
-                        if (value != passwordController.text) {
+                      validator: (v) {
+                        if (v != passwordController.text) {
                           return "Passwords do not match";
                         }
                         return null;
@@ -194,54 +185,33 @@ class _SignupScreenState extends State<SignupScreen> {
 
                     const SizedBox(height: 25),
 
-                    // SIGN UP BUTTON → NAVIGATE
+                    // SIGNUP BUTTON
                     Center(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          gradient: const LinearGradient(
-                            colors: [
-                              Color(0xFFFFE8A3),
-                              Color(0xFFFFCFA8),
-                              Color(0xFFFFB88A),
-                            ],
-                          ),
-                        ),
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 40,
-                              vertical: 12,
-                            ),
-                            backgroundColor: Colors.transparent,
-                            shadowColor: Colors.transparent,
-                            elevation: 0,
-                          ),
-                          onPressed: () {
-                            if (_formKey.currentState!.validate()) {
-                              if (UserRole.role == "parent") {
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const ParentDashboard(),
-                                  ),
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          if (_formKey.currentState!.validate()) {
+                            await ref
+                                .read(authViewModelProvider.notifier)
+                                .signup(
+                                  emailController.text.trim(),
+                                  passwordController.text.trim(),
                                 );
-                              }
+
+                            if (context.mounted && UserRole.role == "parent") {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const ParentDashboard(),
+                                ),
+                              );
                             }
-                          },
-                          child: const Text(
-                            "Sign Up",
-                            style: TextStyle(
-                              color: Colors.black87,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
+                          }
+                        },
+                        child: const Text("Sign Up"),
                       ),
                     ),
 
-                    const SizedBox(height: 15),
+                    const SizedBox(height: 20),
 
                     // LOGIN REDIRECT
                     Center(
@@ -254,14 +224,9 @@ class _SignupScreenState extends State<SignupScreen> {
                             ),
                           );
                         },
-                        child: const Text(
-                          "Already have an account? Login",
-                          style: TextStyle(fontSize: 14, color: Colors.black87),
-                        ),
+                        child: const Text("Already have an account? Login"),
                       ),
                     ),
-
-                    const SizedBox(height: 20),
                   ],
                 ),
               ),
