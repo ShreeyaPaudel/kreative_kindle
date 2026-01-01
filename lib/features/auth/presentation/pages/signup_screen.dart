@@ -16,16 +16,15 @@ class SignupScreen extends ConsumerStatefulWidget {
 class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
-  bool _loading = false;
+  final fullNameController = TextEditingController();
+  final emailController = TextEditingController();
+  final addressController = TextEditingController();
+  final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
 
-  final TextEditingController fullNameController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController addressController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController =
-      TextEditingController();
+  bool obscurePassword = true;
+  bool obscureConfirmPassword = true;
+  bool loading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +33,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // 🔷 TOP IMAGE
+            // 🔵 TOP IMAGE
             Stack(
               children: [
                 SizedBox(
@@ -59,220 +58,193 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               ],
             ),
 
-            // 🔷 FORM CARD
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-              child: Container(
-                padding: const EdgeInsets.all(22),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
+              padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 20),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      UserRole.role == "parent"
+                          ? "Hi Parent!"
+                          : "Hi Instructor!",
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      "Sign Up Now!",
+                      style: TextStyle(color: Colors.black54),
+                    ),
+
+                    const SizedBox(height: 25),
+
+                    // FULL NAME
+                    _inputField(
+                      controller: fullNameController,
+                      label: "Full Name",
+                      validator: (v) =>
+                          v!.isEmpty ? "Full name required" : null,
+                    ),
+
+                    // EMAIL
+                    _inputField(
+                      controller: emailController,
+                      label: "Email",
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (v) {
+                        if (v!.isEmpty) return "Email required";
+                        if (!v.contains("@")) return "Enter valid email";
+                        return null;
+                      },
+                    ),
+
+                    // ADDRESS
+                    _inputField(
+                      controller: addressController,
+                      label: "Address",
+                      validator: (v) => v!.isEmpty ? "Address required" : null,
+                    ),
+
+                    // PASSWORD
+                    _inputField(
+                      controller: passwordController,
+                      label: "Password",
+                      obscure: obscurePassword,
+                      suffix: IconButton(
+                        icon: Icon(
+                          obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            obscurePassword = !obscurePassword;
+                          });
+                        },
+                      ),
+                      validator: (v) {
+                        if (v!.isEmpty) return "Password required";
+                        if (v.length < 8) {
+                          return "Minimum 8 characters";
+                        }
+                        return null;
+                      },
+                    ),
+
+                    // CONFIRM PASSWORD
+                    _inputField(
+                      controller: confirmPasswordController,
+                      label: "Confirm Password",
+                      obscure: obscureConfirmPassword,
+                      suffix: IconButton(
+                        icon: Icon(
+                          obscureConfirmPassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            obscureConfirmPassword = !obscureConfirmPassword;
+                          });
+                        },
+                      ),
+                      validator: (v) {
+                        if (v != passwordController.text) {
+                          return "Passwords do not match";
+                        }
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 25),
+
+                    // 🟡 SIGN UP BUTTON
+                    Center(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          gradient: const LinearGradient(
+                            colors: [
+                              Color(0xFFFFE8A3),
+                              Color(0xFFFFCFA8),
+                              Color(0xFFFFB88A),
+                            ],
+                          ),
+                        ),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 40,
+                              vertical: 14,
+                            ),
+                          ),
+                          onPressed: loading
+                              ? null
+                              : () async {
+                                  if (_formKey.currentState!.validate()) {
+                                    setState(() => loading = true);
+
+                                    await ref
+                                        .read(authViewModelProvider.notifier)
+                                        .signup(
+                                          emailController.text.trim(),
+                                          passwordController.text.trim(),
+                                        );
+
+                                    if (!mounted) return;
+
+                                    setState(() => loading = false);
+
+                                    // 👉 SIGNUP SUCCESS → LOGIN PAGE
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => const LoginScreen(),
+                                      ),
+                                    );
+                                  }
+                                },
+                          child: loading
+                              ? const CircularProgressIndicator(
+                                  color: Colors.black,
+                                )
+                              : const Text(
+                                  "Sign Up",
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // 🔁 LOGIN REDIRECT
+                    Center(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const LoginScreen(),
+                            ),
+                          );
+                        },
+                        child: const Text(
+                          "Already have an account? Login",
+                          style: TextStyle(color: Colors.black87),
+                        ),
+                      ),
                     ),
                   ],
-                ),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        UserRole.role == "parent"
-                            ? "Hi Parent!"
-                            : "Hi Instructor!",
-                        style: const TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      const Text(
-                        "Sign Up Now!",
-                        style: TextStyle(color: Colors.black54),
-                      ),
-
-                      const SizedBox(height: 28),
-
-                      // 👤 FULL NAME
-                      _inputField(
-                        controller: fullNameController,
-                        label: "Full Name",
-                        validator: (v) =>
-                            v!.isEmpty ? "Full name required" : null,
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // ✉️ EMAIL
-                      _inputField(
-                        controller: emailController,
-                        label: "Email",
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (v) {
-                          if (v!.isEmpty) return "Email required";
-                          if (!v.contains("@")) {
-                            return "Enter valid email";
-                          }
-                          return null;
-                        },
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // 📍 ADDRESS
-                      _inputField(
-                        controller: addressController,
-                        label: "Address",
-                        validator: (v) =>
-                            v!.isEmpty ? "Address required" : null,
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // 🔒 PASSWORD
-                      _inputField(
-                        controller: passwordController,
-                        label: "Password",
-                        obscure: _obscurePassword,
-                        suffix: IconButton(
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword;
-                            });
-                          },
-                        ),
-                        validator: (v) {
-                          if (v!.isEmpty) return "Password required";
-                          if (v.length < 8) {
-                            return "Min 8 characters";
-                          }
-                          return null;
-                        },
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // 🔐 CONFIRM PASSWORD
-                      _inputField(
-                        controller: confirmPasswordController,
-                        label: "Confirm Password",
-                        obscure: _obscureConfirmPassword,
-                        suffix: IconButton(
-                          icon: Icon(
-                            _obscureConfirmPassword
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _obscureConfirmPassword =
-                                  !_obscureConfirmPassword;
-                            });
-                          },
-                        ),
-                        validator: (v) {
-                          if (v != passwordController.text) {
-                            return "Passwords do not match";
-                          }
-                          return null;
-                        },
-                      ),
-
-                      const SizedBox(height: 28),
-
-                      // 🌈 SIGNUP BUTTON
-                      SizedBox(
-                        width: double.infinity,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            gradient: const LinearGradient(
-                              colors: [
-                                Color(0xFFFFE8A3),
-                                Color(0xFFFFCFA8),
-                                Color(0xFFFFB88A),
-                              ],
-                            ),
-                          ),
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              shadowColor: Colors.transparent,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                            ),
-                            onPressed: _loading
-                                ? null
-                                : () async {
-                                    if (_formKey.currentState!.validate()) {
-                                      setState(() => _loading = true);
-
-                                      await ref
-                                          .read(authViewModelProvider.notifier)
-                                          .signup(
-                                            emailController.text.trim(),
-                                            passwordController.text.trim(),
-                                          );
-
-                                      setState(() => _loading = false);
-
-                                      if (context.mounted &&
-                                          UserRole.role == "parent") {
-                                        Navigator.pushReplacement(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) =>
-                                                const ParentDashboard(),
-                                          ),
-                                        );
-                                      }
-                                    }
-                                  },
-                            child: _loading
-                                ? const CircularProgressIndicator(
-                                    color: Colors.black,
-                                  )
-                                : const Text(
-                                    "Sign Up",
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      // 🔁 LOGIN REDIRECT
-                      Center(
-                        child: GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const LoginScreen(),
-                              ),
-                            );
-                          },
-                          child: const Text(
-                            "Already have an account? Login",
-                            style: TextStyle(fontSize: 14),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
               ),
             ),
@@ -282,28 +254,31 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     );
   }
 
-  // ✨ COMMON INPUT FIELD (same as login)
+  // 🔹 Reusable Input Field
   Widget _inputField({
     required TextEditingController controller,
     required String label,
-    bool obscure = false,
     TextInputType keyboardType = TextInputType.text,
+    bool obscure = false,
     Widget? suffix,
     String? Function(String?)? validator,
   }) {
-    return TextFormField(
-      controller: controller,
-      obscureText: obscure,
-      keyboardType: keyboardType,
-      validator: validator,
-      decoration: InputDecoration(
-        labelText: label,
-        filled: true,
-        fillColor: Colors.grey.shade100,
-        suffixIcon: suffix,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: TextFormField(
+        controller: controller,
+        keyboardType: keyboardType,
+        obscureText: obscure,
+        validator: validator,
+        decoration: InputDecoration(
+          labelText: label,
+          filled: true,
+          fillColor: const Color(0xFFF5F5F5),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide.none,
+          ),
+          suffixIcon: suffix,
         ),
       ),
     );

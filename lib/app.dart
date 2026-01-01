@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:kreative_kindle/features/auth/presentation/pages/login_screen.dart';
-// import 'screens/Parent_Instructor/Splash/splash_screen.dart';
-import 'package:kreative_kindle/theme/theme_data.dart';
+import 'features/auth/presentation/pages/login_screen.dart';
 
 class KreativeKindleApp extends StatelessWidget {
   const KreativeKindleApp({super.key});
@@ -10,9 +8,9 @@ class KreativeKindleApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: "KreativeKindle",
-      theme: getApplicationTheme(),
-      home: const LoginScreen(),
+      title: 'Kreative Kindle',
+      theme: ThemeData(useMaterial3: true),
+      home: const LoginScreen(), // or LoginScreen
     );
   }
 }
