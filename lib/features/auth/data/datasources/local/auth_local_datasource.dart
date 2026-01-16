@@ -1,5 +1,5 @@
 import 'package:hive/hive.dart';
-import '../models/user_model.dart';
+import '../../models/user_model.dart';
 import 'hive_box_provider.dart';
 
 class AuthLocalDatasource {

@@ -106,14 +106,7 @@ class _AuthInterceptor extends Interceptor {
     RequestInterceptorHandler handler,
   ) async {
     // Public endpoints (no token needed)
-    final publicEndpoints = [
-      ApiEndpoints.registerByRole('parent'),
-      ApiEndpoints.registerByRole('instructor'),
-      ApiEndpoints.registerByRole('admin'),
-      ApiEndpoints.loginByRole('parent'),
-      ApiEndpoints.loginByRole('instructor'),
-      ApiEndpoints.loginByRole('admin'),
-    ];
+    final publicEndpoints = <String>[ApiEndpoints.register, ApiEndpoints.login];
 
     final isPublic = publicEndpoints.any((e) => options.path.startsWith(e));
 

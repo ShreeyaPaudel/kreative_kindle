@@ -44,10 +44,9 @@ dependencies:
 
   dio: ^5.5.0
   dio_smart_retry: ^6.0.0
-  pretty_dio_logger: ^1.3.1
-  flutter_secure_storage: ^9.2.2
-  flutter_riverpod: ^2.5.1
-  connectivity_plus: ^6.0.3
+  pretty_dio_logger: ^1.4.0
+
+  connectivity_plus: ^7.0.0
 
   # Local Database (Offline Storage)
   hive: ^2.2.3
@@ -56,11 +55,7 @@ dependencies:
   path: ^1.9.0
 
 
- # Networking
-  dio: ^5.4.1
-  dio_smart_retry: ^7.0.1
-  connectivity_plus: ^7.0.0
-  pretty_dio_logger: ^1.4.0
+
 
 
 # Authentication

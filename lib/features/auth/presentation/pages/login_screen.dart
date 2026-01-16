@@ -23,6 +23,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _loading = false;
 
   @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
@@ -152,10 +159,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       final success = await ref
                                           .read(authViewModelProvider.notifier)
                                           .login(
-                                            emailController.text.trim(),
-                                            passwordController.text.trim(),
+                                            email: emailController.text.trim(),
+                                            password: passwordController.text
+                                                .trim(),
                                           );
 
+                                      if (!mounted) return;
                                       setState(() => _loading = false);
 
                                       if (success) {
@@ -167,12 +176,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                           ),
                                         );
                                       } else {
+                                        final err = ref
+                                            .read(authViewModelProvider)
+                                            .error;
+
                                         ScaffoldMessenger.of(
                                           context,
                                         ).showSnackBar(
-                                          const SnackBar(
+                                          SnackBar(
                                             content: Text(
-                                              "Invalid credentials",
+                                              err ?? "Invalid credentials",
                                             ),
                                           ),
                                         );

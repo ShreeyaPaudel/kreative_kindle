@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../screens/Parent/Dashboard/parent_dashboard.dart';
 import '../../../../screens/Role/user_role.dart';
 import '../view_model/auth_viewmodel.dart';
 import 'login_screen.dart';
@@ -24,10 +23,21 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   bool obscurePassword = true;
   bool obscureConfirmPassword = true;
-  bool loading = false;
+
+  @override
+  void dispose() {
+    fullNameController.dispose();
+    emailController.dispose();
+    addressController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authViewModelProvider);
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
@@ -82,7 +92,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
                     const SizedBox(height: 25),
 
-                    // FULL NAME
                     _inputField(
                       controller: fullNameController,
                       label: "Full Name",
@@ -90,7 +99,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                           v!.isEmpty ? "Full name required" : null,
                     ),
 
-                    // EMAIL
                     _inputField(
                       controller: emailController,
                       label: "Email",
@@ -102,14 +110,12 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       },
                     ),
 
-                    // ADDRESS
                     _inputField(
                       controller: addressController,
                       label: "Address",
                       validator: (v) => v!.isEmpty ? "Address required" : null,
                     ),
 
-                    // PASSWORD
                     _inputField(
                       controller: passwordController,
                       label: "Password",
@@ -128,14 +134,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       ),
                       validator: (v) {
                         if (v!.isEmpty) return "Password required";
-                        if (v.length < 8) {
-                          return "Minimum 8 characters";
-                        }
+                        if (v.length < 8) return "Minimum 8 characters";
                         return null;
                       },
                     ),
 
-                    // CONFIRM PASSWORD
                     _inputField(
                       controller: confirmPasswordController,
                       label: "Confirm Password",
@@ -153,6 +156,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         },
                       ),
                       validator: (v) {
+                        if (v == null || v.isEmpty) {
+                          return "Confirm password required";
+                        }
                         if (v != passwordController.text) {
                           return "Passwords do not match";
                         }
@@ -162,7 +168,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
                     const SizedBox(height: 25),
 
-                    // 🟡 SIGN UP BUTTON
                     Center(
                       child: Container(
                         decoration: BoxDecoration(
@@ -184,33 +189,45 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                               vertical: 14,
                             ),
                           ),
-                          onPressed: loading
+                          onPressed: authState.isLoading
                               ? null
                               : () async {
                                   if (_formKey.currentState!.validate()) {
-                                    setState(() => loading = true);
-
-                                    await ref
+                                    final ok = await ref
                                         .read(authViewModelProvider.notifier)
                                         .signup(
-                                          emailController.text.trim(),
-                                          passwordController.text.trim(),
+                                          fullName: fullNameController.text
+                                              .trim(),
+                                          email: emailController.text.trim(),
+                                          address: addressController.text
+                                              .trim(),
+                                          password: passwordController.text
+                                              .trim(),
                                         );
 
                                     if (!mounted) return;
 
-                                    setState(() => loading = false);
-
-                                    // 👉 SIGNUP SUCCESS → LOGIN PAGE
-                                    Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => const LoginScreen(),
-                                      ),
-                                    );
+                                    if (ok) {
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => const LoginScreen(),
+                                        ),
+                                      );
+                                    } else {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            authState.error ?? "Signup failed",
+                                          ),
+                                        ),
+                                      );
+                                    }
                                   }
                                 },
-                          child: loading
+                          child: authState.isLoading
                               ? const CircularProgressIndicator(
                                   color: Colors.black,
                                 )
@@ -227,7 +244,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
                     const SizedBox(height: 20),
 
-                    // 🔁 LOGIN REDIRECT
                     Center(
                       child: GestureDetector(
                         onTap: () {
@@ -254,7 +270,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     );
   }
 
-  // 🔹 Reusable Input Field
   Widget _inputField({
     required TextEditingController controller,
     required String label,

@@ -1,51 +1,52 @@
 class AuthApiModel {
-  final String? id;
-
-  // Signup fields (based on your UI)
-  final String fullName;
+  final String? fullName; // UI uses fullName
   final String email;
-  final String address;
+  final String? address;
   final String password;
-  final String role; // parent / instructor / admin
+  final String? role;
 
-  // Response
+  // response fields (optional, depends on your backend)
   final String? token;
   final String? message;
 
-  AuthApiModel({
-    this.id,
-    required this.fullName,
+  const AuthApiModel({
+    this.fullName,
     required this.email,
-    required this.address,
+    this.address,
     required this.password,
-    required this.role,
+    this.role,
     this.token,
     this.message,
   });
 
-  Map<String, dynamic> toJson() {
+  /// ✅ IMPORTANT:
+  /// Backend expects "username", not "fullName"
+  Map<String, dynamic> toRegisterJson() {
     return {
-      "fullName": fullName,
+      "username": fullName ?? "", // <-- FIX
       "email": email,
-      "address": address,
       "password": password,
-      "role": role,
+      if (role != null) "role": role,
+      if (address != null) "address": address,
+    };
+  }
+
+  /// Login payload (no username needed)
+  Map<String, dynamic> toLoginJson() {
+    return {
+      "email": email,
+      "password": password,
+      if (role != null) "role": role,
     };
   }
 
   factory AuthApiModel.fromJson(Map<String, dynamic> json) {
     return AuthApiModel(
-      id: (json["_id"] ?? json["id"])?.toString(),
-
-      // ✅ NOTE: no ?.toString() here
-      fullName: (json["fullName"] ?? json["name"] ?? "").toString(),
+      fullName: (json["username"] ?? json["fullName"])?.toString(),
       email: (json["email"] ?? "").toString(),
-      address: (json["address"] ?? "").toString(),
-
-      // ✅ never store password from response
-      password: "",
-
-      role: (json["role"] ?? "parent").toString(),
+      address: json["address"]?.toString(),
+      password: "", // never store password from response
+      role: json["role"]?.toString(),
       token: json["token"]?.toString(),
       message: json["message"]?.toString(),
     );
