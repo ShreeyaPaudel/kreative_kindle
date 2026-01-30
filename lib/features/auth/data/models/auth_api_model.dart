@@ -19,25 +19,17 @@ class AuthApiModel {
     this.message,
   });
 
-  /// ✅ IMPORTANT:
-  /// Backend expects "username", not "fullName"
   Map<String, dynamic> toRegisterJson() {
     return {
-      "username": fullName ?? "", // <-- FIX
+      "username": fullName ?? "",
       "email": email,
       "password": password,
-      if (role != null) "role": role,
       if (address != null) "address": address,
     };
   }
 
-  /// Login payload (no username needed)
   Map<String, dynamic> toLoginJson() {
-    return {
-      "email": email,
-      "password": password,
-      if (role != null) "role": role,
-    };
+    return {"email": email, "password": password};
   }
 
   factory AuthApiModel.fromJson(Map<String, dynamic> json) {

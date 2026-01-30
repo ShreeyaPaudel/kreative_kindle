@@ -15,8 +15,6 @@ class AuthRemoteDatasource {
   AuthRemoteDatasource({required this.apiClient});
 
   Future<AuthApiModel> register(AuthApiModel model) async {
-    final role = UserRole.role;
-
     final response = await apiClient.post(
       ApiEndpoints.register,
       data: AuthApiModel(
@@ -24,9 +22,10 @@ class AuthRemoteDatasource {
         email: model.email,
         address: model.address,
         password: model.password,
-        role: role,
-      ).toRegisterJson(), // ✅ sends username
+      ).toRegisterJson(),
     );
+
+    print("REGISTER RESPONSE => ${response.data}");
 
     return AuthApiModel.fromJson(response.data as Map<String, dynamic>);
   }
@@ -35,16 +34,12 @@ class AuthRemoteDatasource {
     required String email,
     required String password,
   }) async {
-    final role = UserRole.role;
-
     final response = await apiClient.post(
       ApiEndpoints.login,
-      data: AuthApiModel(
-        email: email,
-        password: password,
-        role: role,
-      ).toLoginJson(),
+      data: AuthApiModel(email: email, password: password).toLoginJson(),
     );
+
+    print("LOGIN RESPONSE => ${response.data}");
 
     return AuthApiModel.fromJson(response.data as Map<String, dynamic>);
   }
