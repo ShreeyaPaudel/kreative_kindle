@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../screens/Parent/Dashboard/parent_dashboard.dart';
-import '../../../../screens/Role/user_role.dart';
+import '../../../dashboard/presentation/pages/dashboard_page.dart';
 import '../view_model/auth_viewmodel.dart';
 import 'signup_screen.dart';
 
@@ -82,11 +81,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        UserRole.role == "parent"
-                            ? "Welcome Back, Parent!"
-                            : "Welcome Back, Instructor!",
-                        style: const TextStyle(
+                      const Text(
+                        "Welcome Back!",
+                        style: TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.w700,
                         ),
@@ -102,7 +99,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       _inputField(
                         controller: emailController,
                         label: "Email",
-                        validator: (v) => v!.isEmpty ? "Email required" : null,
+                        validator: (v) =>
+                            (v == null || v.isEmpty) ? "Email required" : null,
                       ),
 
                       const SizedBox(height: 18),
@@ -124,8 +122,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             });
                           },
                         ),
-                        validator: (v) =>
-                            v!.isEmpty ? "Password required" : null,
+                        validator: (v) => (v == null || v.isEmpty)
+                            ? "Password required"
+                            : null,
                       ),
 
                       const SizedBox(height: 28),
@@ -153,48 +152,57 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             onPressed: _loading
                                 ? null
                                 : () async {
-                                    if (_formKey.currentState!.validate()) {
-                                      setState(() => _loading = true);
+                                    if (!_formKey.currentState!.validate()) {
+                                      return;
+                                    }
 
-                                      final success = await ref
-                                          .read(authViewModelProvider.notifier)
-                                          .login(
-                                            email: emailController.text.trim(),
-                                            password: passwordController.text
-                                                .trim(),
-                                          );
+                                    setState(() => _loading = true);
 
-                                      if (!mounted) return;
-                                      setState(() => _loading = false);
-
-                                      if (success) {
-                                        Navigator.pushReplacement(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) =>
-                                                const ParentDashboard(),
-                                          ),
+                                    final success = await ref
+                                        .read(authViewModelProvider.notifier)
+                                        .login(
+                                          email: emailController.text.trim(),
+                                          password: passwordController.text
+                                              .trim(),
                                         );
-                                      } else {
-                                        final err = ref
-                                            .read(authViewModelProvider)
-                                            .error;
 
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              err ?? "Invalid credentials",
-                                            ),
+                                    if (!mounted) return;
+                                    setState(() => _loading = false);
+
+                                    if (success) {
+                                      // ✅ TEMP: role hardcoded for now
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => const DashboardPage(
+                                            role: "parent",
                                           ),
-                                        );
-                                      }
+                                        ),
+                                      );
+                                    } else {
+                                      final err = ref
+                                          .read(authViewModelProvider)
+                                          .error;
+
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            err ?? "Invalid credentials",
+                                          ),
+                                        ),
+                                      );
                                     }
                                   },
                             child: _loading
-                                ? const CircularProgressIndicator(
-                                    color: Colors.black,
+                                ? const SizedBox(
+                                    height: 22,
+                                    width: 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      color: Colors.black,
+                                    ),
                                   )
                                 : const Text(
                                     "Login",
