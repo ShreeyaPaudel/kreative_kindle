@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/feature_tile.dart';
 import 'profile_page.dart';
+import 'settings_page.dart';
 
 class DashboardPage extends StatefulWidget {
   final String role; // "parent" / "instructor"
@@ -19,7 +20,7 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget build(BuildContext context) {
     final pages = [
       const Center(child: Text("See Updates", style: TextStyle(fontSize: 18))),
-      const Center(child: Text("Settings", style: TextStyle(fontSize: 18))),
+      const SettingsPage(), // 🔥 REAL SETTINGS PAGE
       _homeUi(),
       ProfilePage(role: widget.role),
       const Center(child: Text("More", style: TextStyle(fontSize: 18))),

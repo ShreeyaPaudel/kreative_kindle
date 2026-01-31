@@ -17,12 +17,9 @@ class AuthApiRepository {
 
   AuthApiRepository({required this.remote, required this.networkInfo});
 
-  // ✅ REGISTER (API) with network check
   Future<bool> register(AuthApiModel model) async {
     final isConnected = await networkInfo.isConnected;
-    if (!isConnected) {
-      throw Exception("No internet connection");
-    }
+    if (!isConnected) throw Exception("No internet connection");
 
     try {
       await remote.register(model);
@@ -38,12 +35,9 @@ class AuthApiRepository {
     }
   }
 
-  // ✅ LOGIN (API) with network check
-  Future<AuthApiModel> login(String email, String password) async {
+  Future<Map<String, dynamic>> login(String email, String password) async {
     final isConnected = await networkInfo.isConnected;
-    if (!isConnected) {
-      throw Exception("No internet connection");
-    }
+    if (!isConnected) throw Exception("No internet connection");
 
     try {
       return await remote.login(email: email, password: password);

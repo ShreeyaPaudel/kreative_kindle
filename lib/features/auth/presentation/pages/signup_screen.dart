@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../screens/Role/user_role.dart';
 import '../view_model/auth_viewmodel.dart';
 import 'login_screen.dart';
 
@@ -75,18 +74,16 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      UserRole.role == "parent"
-                          ? "Hi Parent!"
-                          : "Hi Instructor!",
-                      style: const TextStyle(
+                    const Text(
+                      "Create Account",
+                      style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 4),
                     const Text(
-                      "Sign Up Now!",
+                      "Sign up to continue",
                       style: TextStyle(color: Colors.black54),
                     ),
 
@@ -95,8 +92,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     _inputField(
                       controller: fullNameController,
                       label: "Full Name",
-                      validator: (v) =>
-                          v!.isEmpty ? "Full name required" : null,
+                      validator: (v) => (v == null || v.isEmpty)
+                          ? "Full name required"
+                          : null,
                     ),
 
                     _inputField(
@@ -104,7 +102,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       label: "Email",
                       keyboardType: TextInputType.emailAddress,
                       validator: (v) {
-                        if (v!.isEmpty) return "Email required";
+                        if (v == null || v.isEmpty) return "Email required";
                         if (!v.contains("@")) return "Enter valid email";
                         return null;
                       },
@@ -113,7 +111,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     _inputField(
                       controller: addressController,
                       label: "Address",
-                      validator: (v) => v!.isEmpty ? "Address required" : null,
+                      validator: (v) =>
+                          (v == null || v.isEmpty) ? "Address required" : null,
                     ),
 
                     _inputField(
@@ -133,7 +132,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         },
                       ),
                       validator: (v) {
-                        if (v!.isEmpty) return "Password required";
+                        if (v == null || v.isEmpty) return "Password required";
                         if (v.length < 8) return "Minimum 8 characters";
                         return null;
                       },
@@ -192,44 +191,48 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                           onPressed: authState.isLoading
                               ? null
                               : () async {
-                                  if (_formKey.currentState!.validate()) {
-                                    final ok = await ref
-                                        .read(authViewModelProvider.notifier)
-                                        .signup(
-                                          fullName: fullNameController.text
-                                              .trim(),
-                                          email: emailController.text.trim(),
-                                          address: addressController.text
-                                              .trim(),
-                                          password: passwordController.text
-                                              .trim(),
-                                        );
+                                  if (!_formKey.currentState!.validate())
+                                    return;
 
-                                    if (!mounted) return;
+                                  final ok = await ref
+                                      .read(authViewModelProvider.notifier)
+                                      .signup(
+                                        fullName: fullNameController.text
+                                            .trim(),
+                                        email: emailController.text.trim(),
+                                        address: addressController.text.trim(),
+                                        password: passwordController.text
+                                            .trim(),
+                                      );
 
-                                    if (ok) {
-                                      Navigator.pushReplacement(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => const LoginScreen(),
-                                        ),
-                                      );
-                                    } else {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            authState.error ?? "Signup failed",
-                                          ),
-                                        ),
-                                      );
-                                    }
+                                  if (!mounted) return;
+
+                                  if (ok) {
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => const LoginScreen(),
+                                      ),
+                                    );
+                                  } else {
+                                    final err = ref
+                                        .read(authViewModelProvider)
+                                        .error;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(err ?? "Signup failed"),
+                                      ),
+                                    );
                                   }
                                 },
                           child: authState.isLoading
-                              ? const CircularProgressIndicator(
-                                  color: Colors.black,
+                              ? const SizedBox(
+                                  height: 22,
+                                  width: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    color: Colors.black,
+                                  ),
                                 )
                               : const Text(
                                   "Sign Up",

@@ -1,8 +1,8 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod/legacy.dart';
 
 import '../../data/models/auth_api_model.dart';
 import '../../data/repositories/auth_api_repository.dart';
-import '../../../../core/services/user_role.dart';
 
 final authViewModelProvider = StateNotifierProvider<AuthViewModel, AuthState>((
   ref,
@@ -14,11 +14,16 @@ final authViewModelProvider = StateNotifierProvider<AuthViewModel, AuthState>((
 class AuthState {
   final bool isLoading;
   final String? error;
+  final String? token;
 
-  const AuthState({this.isLoading = false, this.error});
+  const AuthState({this.isLoading = false, this.error, this.token});
 
-  AuthState copyWith({bool? isLoading, String? error}) {
-    return AuthState(isLoading: isLoading ?? this.isLoading, error: error);
+  AuthState copyWith({bool? isLoading, String? error, String? token}) {
+    return AuthState(
+      isLoading: isLoading ?? this.isLoading,
+      error: error,
+      token: token ?? this.token,
+    );
   }
 }
 
@@ -41,11 +46,12 @@ class AuthViewModel extends StateNotifier<AuthState> {
         email: email,
         address: address,
         password: password,
-        role: UserRole.role,
+        role: "parent",
       );
 
       await _repo.register(model);
-      state = state.copyWith(isLoading: false);
+
+      state = state.copyWith(isLoading: false, error: null);
       return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -57,12 +63,24 @@ class AuthViewModel extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      await _repo.login(email, password);
-      state = state.copyWith(isLoading: false);
+      final res = await _repo.login(email, password);
+
+      final token = res["token"]?.toString();
+
+      if (token == null || token.isEmpty) {
+        throw Exception("Token not found from backend");
+      }
+
+      state = state.copyWith(isLoading: false, error: null, token: token);
+
       return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
       return false;
     }
+  }
+
+  void clearAuth() {
+    state = const AuthState();
   }
 }

@@ -12,6 +12,8 @@ final apiClientProvider = Provider<ApiClient>((ref) => ApiClient());
 class ApiClient {
   late final Dio _dio;
 
+  Dio get dio => _dio;
+
   ApiClient() {
     _dio = Dio(
       BaseOptions(

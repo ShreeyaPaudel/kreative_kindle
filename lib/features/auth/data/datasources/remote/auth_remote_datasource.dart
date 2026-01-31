@@ -1,46 +1,69 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kreative_kindle/core/api/api_client.dart';
-import 'package:kreative_kindle/core/api/api_endpoints.dart';
-import 'package:kreative_kindle/core/services/user_role.dart';
-import 'package:kreative_kindle/features/auth/data/models/auth_api_model.dart';
+
+import '../../models/auth_api_model.dart';
+import '../../../../../core/api/api_client.dart';
+import '../../../../../core/api/api_endpoints.dart';
 
 final authRemoteDatasourceProvider = Provider<AuthRemoteDatasource>((ref) {
   final apiClient = ref.read(apiClientProvider);
-  return AuthRemoteDatasource(apiClient: apiClient);
+  return AuthRemoteDatasource(apiClient.dio);
 });
 
 class AuthRemoteDatasource {
-  final ApiClient apiClient;
+  final Dio _dio;
 
-  AuthRemoteDatasource({required this.apiClient});
+  AuthRemoteDatasource(this._dio);
 
-  Future<AuthApiModel> register(AuthApiModel model) async {
-    final response = await apiClient.post(
+  // ✅ REGISTER
+  Future<void> register(AuthApiModel model) async {
+    await _dio.post(
       ApiEndpoints.register,
-      data: AuthApiModel(
-        fullName: model.fullName,
-        email: model.email,
-        address: model.address,
-        password: model.password,
-      ).toRegisterJson(),
+      data: {
+        "fullName": model.fullName,
+        "email": model.email,
+        "address": model.address,
+        "password": model.password,
+        "role": model.role,
+      },
     );
-
-    print("REGISTER RESPONSE => ${response.data}");
-
-    return AuthApiModel.fromJson(response.data as Map<String, dynamic>);
   }
 
-  Future<AuthApiModel> login({
+  // ✅ LOGIN -> returns Map {role, token, email}
+  Future<Map<String, dynamic>> login({
     required String email,
     required String password,
   }) async {
-    final response = await apiClient.post(
+    final response = await _dio.post(
       ApiEndpoints.login,
-      data: AuthApiModel(email: email, password: password).toLoginJson(),
+      data: {"email": email, "password": password},
     );
 
-    print("LOGIN RESPONSE => ${response.data}");
+    final data = response.data;
 
-    return AuthApiModel.fromJson(response.data as Map<String, dynamic>);
+    // DEBUG (keep for now)
+    // ignore: avoid_print
+    print("LOGIN RESPONSE => $data");
+
+    // Supports:
+    // 1) { user: {...}, token: "..." }
+    // 2) { data: { user: {...} }, token: "..." }
+    // 3) { data: {...}, user: {...} } (extra safe)
+
+    Map user = {};
+
+    if (data is Map) {
+      if (data["user"] is Map) {
+        user = data["user"] as Map;
+      } else if (data["data"] is Map && (data["data"] as Map)["user"] is Map) {
+        user = (data["data"] as Map)["user"] as Map;
+      }
+    }
+
+    final token = (data is Map) ? data["token"]?.toString() : null;
+    final role = user["role"]?.toString();
+    final userEmail = user["email"]?.toString();
+
+    return <String, dynamic>{"email": userEmail, "role": role, "token": token};
   }
 }

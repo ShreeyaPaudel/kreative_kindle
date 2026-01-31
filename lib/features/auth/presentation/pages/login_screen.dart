@@ -30,6 +30,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // keep watch so UI can rebuild if needed
+    ref.watch(authViewModelProvider);
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
@@ -99,8 +102,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       _inputField(
                         controller: emailController,
                         label: "Email",
-                        validator: (v) =>
-                            (v == null || v.isEmpty) ? "Email required" : null,
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? "Email required"
+                            : null,
                       ),
 
                       const SizedBox(height: 18),
@@ -122,7 +126,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             });
                           },
                         ),
-                        validator: (v) => (v == null || v.isEmpty)
+                        validator: (v) => (v == null || v.trim().isEmpty)
                             ? "Password required"
                             : null,
                       ),
@@ -152,9 +156,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             onPressed: _loading
                                 ? null
                                 : () async {
-                                    if (!_formKey.currentState!.validate()) {
+                                    if (!_formKey.currentState!.validate())
                                       return;
-                                    }
 
                                     setState(() => _loading = true);
 
@@ -167,29 +170,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                         );
 
                                     if (!mounted) return;
+
                                     setState(() => _loading = false);
 
                                     if (success) {
-                                      // ✅ TEMP: role hardcoded for now
+                                      // ✅ ROLE REMOVED: always parent
                                       Navigator.pushReplacement(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (_) => const DashboardPage(
-                                            role: "parent",
-                                          ),
+                                          builder: (_) =>
+                                              DashboardPage(role: "parent"),
                                         ),
                                       );
                                     } else {
-                                      final err = ref
-                                          .read(authViewModelProvider)
-                                          .error;
+                                      final updatedState = ref.read(
+                                        authViewModelProvider,
+                                      );
 
                                       ScaffoldMessenger.of(
                                         context,
                                       ).showSnackBar(
                                         SnackBar(
                                           content: Text(
-                                            err ?? "Invalid credentials",
+                                            updatedState.error ??
+                                                "Invalid email or password",
                                           ),
                                         ),
                                       );
@@ -246,7 +250,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  // ✨ REUSABLE INPUT FIELD (clean UI)
+  // ✨ REUSABLE INPUT FIELD
   Widget _inputField({
     required TextEditingController controller,
     required String label,
