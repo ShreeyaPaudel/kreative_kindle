@@ -1,29 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'core/providers/theme_provider.dart';
-import 'features/splash/presentation/pages/splash_screen.dart';
+import 'package:kreative_kindle/features/splash/presentation/pages/splash_screen.dart';
+import 'theme/theme_data.dart';
 
-class KreativeKindleApp extends ConsumerWidget {
+class KreativeKindleApp extends StatelessWidget {
   const KreativeKindleApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = ref.watch(themeProvider);
-
+  Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle(
+      const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        statusBarIconBrightness: Brightness.dark,
       ),
     );
-
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Kreative Kindle',
-      themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
-      theme: lightTheme,
-      darkTheme: darkTheme,
+      theme: getApplicationTheme(),
       home: SplashScreen(),
     );
   }

@@ -13,7 +13,6 @@ class SettingsPage extends ConsumerWidget {
     final isDark = ref.watch(themeProvider);
 
     return Scaffold(
-      backgroundColor: Colors.white,
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -35,7 +34,7 @@ class SettingsPage extends ConsumerWidget {
                           subtitle: "Update name, photo, details",
                           onTap: () => _soon(context),
                         ),
-                        _divider(),
+                        _divider(context),
                         _tile(
                           context,
                           icon: Icons.lock_outline,
@@ -48,7 +47,6 @@ class SettingsPage extends ConsumerWidget {
                   ),
 
                   const SizedBox(height: 18),
-
                   _sectionTitle("App"),
                   const SizedBox(height: 10),
                   _settingsCard(
@@ -81,7 +79,7 @@ class SettingsPage extends ConsumerWidget {
                             activeColor: const Color(0xFF8EC5FC),
                           ),
                         ),
-                        _divider(),
+                        _divider(context),
                         _tile(
                           context,
                           icon: Icons.notifications_none,
@@ -89,22 +87,20 @@ class SettingsPage extends ConsumerWidget {
                           subtitle: "Reminders and updates (later)",
                           onTap: () => _soon(context),
                         ),
-                        _divider(),
+                        _divider(context),
                         _tile(
                           context,
                           icon: Icons.image_outlined,
                           title: "Upload Image",
                           subtitle: "Send image to server",
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const UploadImagePage(),
-                              ),
-                            );
-                          },
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const UploadImagePage(),
+                            ),
+                          ),
                         ),
-                        _divider(),
+                        _divider(context),
                         _tile(
                           context,
                           icon: Icons.language,
@@ -117,7 +113,6 @@ class SettingsPage extends ConsumerWidget {
                   ),
 
                   const SizedBox(height: 18),
-
                   _sectionTitle("Support"),
                   const SizedBox(height: 10),
                   _settingsCard(
@@ -130,7 +125,7 @@ class SettingsPage extends ConsumerWidget {
                           subtitle: "FAQs and guidance",
                           onTap: () => _soon(context),
                         ),
-                        _divider(),
+                        _divider(context),
                         _tile(
                           context,
                           icon: Icons.privacy_tip_outlined,
@@ -138,7 +133,7 @@ class SettingsPage extends ConsumerWidget {
                           subtitle: "Read policy (later)",
                           onTap: () => _soon(context),
                         ),
-                        _divider(),
+                        _divider(context),
                         _tile(
                           context,
                           icon: Icons.description_outlined,
@@ -315,7 +310,7 @@ class SettingsPage extends ConsumerWidget {
     );
   }
 
-  Widget _divider() {
+  Widget _divider(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14),
       child: Divider(color: Colors.grey.shade200, height: 1),
