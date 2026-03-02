@@ -5,7 +5,6 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../core/api/api_client.dart';
 import '../../../../features/media/presentation/view_model/media_viewmodel.dart';
 
-// ─── POSTS PROVIDER ──────────────────────────────────────────────────────────
 final postsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
   try {
     final client = ref.read(apiClientProvider);
@@ -26,7 +25,6 @@ final postsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
   }
 });
 
-// ─── UPDATES PAGE (shows posts list) ─────────────────────────────────────────
 class UpdatesPage extends ConsumerWidget {
   const UpdatesPage({super.key});
 
@@ -215,6 +213,7 @@ class _PostCard extends StatelessWidget {
 }
 
 // ─── POST UPDATE PAGE ─────────────────────────────────────────────────────────
+// ─── POST UPDATE PAGE ─────────────────────────────────────────────────────────
 class PostUpdatePage extends ConsumerStatefulWidget {
   const PostUpdatePage({super.key});
 
@@ -224,9 +223,6 @@ class PostUpdatePage extends ConsumerStatefulWidget {
 
 class _PostUpdatePageState extends ConsumerState<PostUpdatePage> {
   final _captionController = TextEditingController();
-  final _materialsController = TextEditingController();
-  final _outcomesController = TextEditingController();
-  final _stepsController = TextEditingController();
   File? _selectedImage;
   bool _isLoading = false;
   final ImagePicker _picker = ImagePicker();
@@ -234,9 +230,6 @@ class _PostUpdatePageState extends ConsumerState<PostUpdatePage> {
   @override
   void dispose() {
     _captionController.dispose();
-    _materialsController.dispose();
-    _outcomesController.dispose();
-    _stepsController.dispose();
     super.dispose();
   }
 
@@ -262,7 +255,6 @@ class _PostUpdatePageState extends ConsumerState<PostUpdatePage> {
     try {
       String? imageUrl;
 
-      // Upload image first if selected
       if (_selectedImage != null) {
         await ref.read(mediaViewModelProvider.notifier).upload(_selectedImage!);
         final mediaState = ref.read(mediaViewModelProvider);
@@ -274,12 +266,6 @@ class _PostUpdatePageState extends ConsumerState<PostUpdatePage> {
         '/posts',
         data: {
           'caption': _captionController.text.trim(),
-          if (_materialsController.text.isNotEmpty)
-            'materials': _materialsController.text.trim(),
-          if (_outcomesController.text.isNotEmpty)
-            'learningOutcomes': _outcomesController.text.trim(),
-          if (_stepsController.text.isNotEmpty)
-            'steps': _stepsController.text.trim(),
           if (imageUrl != null) 'image': imageUrl,
         },
       );
@@ -304,7 +290,6 @@ class _PostUpdatePageState extends ConsumerState<PostUpdatePage> {
     return Scaffold(
       body: Column(
         children: [
-          // Header
           Container(
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(20, 52, 20, 24),
@@ -345,7 +330,7 @@ class _PostUpdatePageState extends ConsumerState<PostUpdatePage> {
                       ),
                     ),
                     Text(
-                      'Share an activity or update',
+                      'Share with the community',
                       style: TextStyle(color: Colors.white70),
                     ),
                   ],
@@ -354,7 +339,6 @@ class _PostUpdatePageState extends ConsumerState<PostUpdatePage> {
             ),
           ),
 
-          // Form
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
@@ -366,7 +350,7 @@ class _PostUpdatePageState extends ConsumerState<PostUpdatePage> {
                     onTap: _pickImage,
                     child: Container(
                       width: double.infinity,
-                      height: 160,
+                      height: 180,
                       decoration: BoxDecoration(
                         color: const Color(0xFFF5F7FF),
                         borderRadius: BorderRadius.circular(16),
@@ -403,44 +387,36 @@ class _PostUpdatePageState extends ConsumerState<PostUpdatePage> {
 
                   const SizedBox(height: 16),
 
-                  _fieldLabel('Caption *'),
-                  _inputField(
-                    controller: _captionController,
-                    hint: 'What did you do today?',
-                    maxLines: 3,
+                  const Text(
+                    'Caption *',
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                   ),
-
-                  const SizedBox(height: 14),
-
-                  _fieldLabel('Materials Used'),
-                  _inputField(
-                    controller: _materialsController,
-                    hint: 'e.g. Paper, scissors, glue...',
-                    maxLines: 2,
-                  ),
-
-                  const SizedBox(height: 14),
-
-                  _fieldLabel('Learning Outcomes'),
-                  _inputField(
-                    controller: _outcomesController,
-                    hint:
-                        'e.g. Improved fine motor skills, colour recognition...',
-                    maxLines: 2,
-                  ),
-
-                  const SizedBox(height: 14),
-
-                  _fieldLabel('Steps / Instructions'),
-                  _inputField(
-                    controller: _stepsController,
-                    hint: 'e.g. 1. Cut paper 2. Glue shapes 3. Display work...',
-                    maxLines: 3,
+                  const SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF5F7FF),
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: const [
+                        BoxShadow(color: Colors.black12, blurRadius: 4),
+                      ],
+                    ),
+                    child: TextField(
+                      controller: _captionController,
+                      maxLines: 5,
+                      decoration: const InputDecoration(
+                        hintText: 'What\'s on your mind?',
+                        hintStyle: TextStyle(
+                          color: Colors.black38,
+                          fontSize: 13,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.all(14),
+                      ),
+                    ),
                   ),
 
                   const SizedBox(height: 24),
 
-                  // Submit button
                   SizedBox(
                     width: double.infinity,
                     child: Container(
@@ -481,47 +457,11 @@ class _PostUpdatePageState extends ConsumerState<PostUpdatePage> {
                       ),
                     ),
                   ),
-
-                  const SizedBox(height: 30),
                 ],
               ),
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _fieldLabel(String label) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        label,
-        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-      ),
-    );
-  }
-
-  Widget _inputField({
-    required TextEditingController controller,
-    required String hint,
-    int maxLines = 1,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFF5F7FF),
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
-      ),
-      child: TextField(
-        controller: controller,
-        maxLines: maxLines,
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: const TextStyle(color: Colors.black38, fontSize: 13),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.all(14),
-        ),
       ),
     );
   }
