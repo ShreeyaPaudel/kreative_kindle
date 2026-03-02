@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/feature_tile.dart';
-import 'profile_page.dart';
-import 'settings_page.dart';
+import './profile_page.dart';
+import '../../../../features/dashboard/presentation/pages/settings_page.dart';
+import '../../../../core/widgets/offline_banner.dart';
+import '../../../../core/services/sensors/accelerometer_screen.dart';
 
-class DashboardPage extends StatefulWidget {
-  final String role; // "parent" / "instructor"
+class DashboardPage extends ConsumerStatefulWidget {
+  final String role;
   const DashboardPage({super.key, required this.role});
 
   @override
-  State<DashboardPage> createState() => _DashboardPageState();
+  ConsumerState<DashboardPage> createState() => _DashboardPageState();
 }
 
-class _DashboardPageState extends State<DashboardPage> {
+class _DashboardPageState extends ConsumerState<DashboardPage> {
   int index = 2;
 
   bool get isParent => widget.role.toLowerCase() == "parent";
@@ -19,8 +22,8 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   Widget build(BuildContext context) {
     final pages = [
-      const Center(child: Text("See Updates", style: TextStyle(fontSize: 18))),
-      const SettingsPage(), // 🔥 REAL SETTINGS PAGE
+      const Center(child: Text("Updates", style: TextStyle(fontSize: 18))),
+      const SettingsPage(),
       _homeUi(),
       ProfilePage(role: widget.role),
       const Center(child: Text("More", style: TextStyle(fontSize: 18))),
@@ -28,7 +31,12 @@ class _DashboardPageState extends State<DashboardPage> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: pages[index],
+      body: Column(
+        children: [
+          const OfflineBanner(),
+          Expanded(child: pages[index]),
+        ],
+      ),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           boxShadow: [
@@ -76,6 +84,7 @@ class _DashboardPageState extends State<DashboardPage> {
     return SingleChildScrollView(
       child: Column(
         children: [
+          // Header
           Stack(
             children: [
               Container(
@@ -149,8 +158,62 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
             ],
           ),
+
           const SizedBox(height: 20),
 
+          // Sensor tile
+          GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AccelerometerScreen()),
+            ),
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF8EC5FC), Color(0xFFE0C3FC)],
+                ),
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: const [
+                  BoxShadow(color: Colors.black12, blurRadius: 6),
+                ],
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.sensors, color: Colors.white, size: 32),
+                  SizedBox(width: 14),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Motion Sensor',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                        ),
+                      ),
+                      Text(
+                        'Tap to view accelerometer data',
+                        style: TextStyle(color: Colors.white70, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                  Spacer(),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    color: Colors.white70,
+                    size: 16,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Today's highlight
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 20),
             padding: const EdgeInsets.all(18),
@@ -161,14 +224,14 @@ class _DashboardPageState extends State<DashboardPage> {
                 BoxShadow(color: Colors.black12, blurRadius: 6),
               ],
             ),
-            child: Row(
+            child: const Row(
               children: [
-                const Text("🌈", style: TextStyle(fontSize: 42)),
-                const SizedBox(width: 14),
+                Text("🌈", style: TextStyle(fontSize: 42)),
+                SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
+                    children: [
                       Text(
                         "Today's Highlight",
                         style: TextStyle(
@@ -201,6 +264,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
           const SizedBox(height: 25),
 
+          // Feature grid
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: GridView.count(
@@ -232,6 +296,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
           const SizedBox(height: 30),
 
+          // Recommended
           const Align(
             alignment: Alignment.centerLeft,
             child: Padding(
@@ -261,8 +326,8 @@ class _DashboardPageState extends State<DashboardPage> {
                 BoxShadow(color: Colors.black12, blurRadius: 10),
               ],
             ),
-            child: Row(
-              children: const [
+            child: const Row(
+              children: [
                 Icon(Icons.extension, size: 36, color: Color(0xFFFF9A3E)),
                 SizedBox(width: 16),
                 Expanded(
