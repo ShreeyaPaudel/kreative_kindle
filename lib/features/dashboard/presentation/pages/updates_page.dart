@@ -1,14 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/api/api_client.dart';
 
-class UpdatesPage extends StatelessWidget {
+final postsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  final client = ref.read(apiClientProvider);
+  final res = await client.get('/posts');
+
+  if (res.data is List) {
+    return (res.data as List).cast<Map<String, dynamic>>();
+  }
+  final List data = res.data['data'] ?? res.data['posts'] ?? [];
+  return data.cast<Map<String, dynamic>>();
+});
+
+class UpdatesPage extends ConsumerWidget {
   const UpdatesPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final postsAsync = ref.watch(postsProvider);
+
     return SafeArea(
       child: Column(
         children: [
-          // Header
           Container(
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
@@ -23,57 +37,59 @@ class UpdatesPage extends StatelessWidget {
                 bottomRight: Radius.circular(24),
               ),
             ),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Updates 📢',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                  ),
+                const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Updates 📢',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Latest posts and announcements',
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                  ],
                 ),
-                SizedBox(height: 4),
-                Text(
-                  'Latest posts and announcements',
-                  style: TextStyle(color: Colors.white70),
+                GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const PostUpdatePage()),
+                  ).then((_) => ref.refresh(postsProvider)),
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.25),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.add, color: Colors.white),
+                  ),
                 ),
               ],
             ),
           ),
-
-          const SizedBox(height: 20),
-
-          // Mock posts
+          const SizedBox(height: 10),
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              children: const [
-                _PostCard(
-                  name: 'Ms. Sarah',
-                  time: '2 hours ago',
-                  content:
-                      'Great session today with the craft corner! 🎨 The kids loved the rainbow paper activity.',
-                  emoji: '🌈',
-                ),
-                SizedBox(height: 14),
-                _PostCard(
-                  name: 'Parent: John',
-                  time: '5 hours ago',
-                  content:
-                      'My child really enjoyed the shape sorting game. Highly recommend it for 4 year olds!',
-                  emoji: '🔷',
-                ),
-                SizedBox(height: 14),
-                _PostCard(
-                  name: 'Ms. Emma',
-                  time: 'Yesterday',
-                  content:
-                      'New activities added this week! Check out the science and nature section 🌿',
-                  emoji: '🌿',
-                ),
-              ],
+            child: postsAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Center(child: Text('Error: $e')),
+              data: (posts) => posts.isEmpty
+                  ? const Center(child: Text('No posts yet'))
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      itemCount: posts.length,
+                      itemBuilder: (context, index) {
+                        final post = posts[index];
+                        return _PostCard(post: post);
+                      },
+                    ),
             ),
           ),
         ],
@@ -83,21 +99,17 @@ class UpdatesPage extends StatelessWidget {
 }
 
 class _PostCard extends StatelessWidget {
-  final String name;
-  final String time;
-  final String content;
-  final String emoji;
-
-  const _PostCard({
-    required this.name,
-    required this.time,
-    required this.content,
-    required this.emoji,
-  });
+  final Map<String, dynamic> post;
+  const _PostCard({required this.post});
 
   @override
   Widget build(BuildContext context) {
+    final caption = post['caption']?.toString() ?? '';
+    final imageUrl = post['image']?.toString();
+    final userName = post['userId']?['fullName']?.toString() ?? 'Parent';
+
     return Container(
+      margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color(0xFFF5F7FF),
@@ -109,28 +121,219 @@ class _PostCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                backgroundColor: const Color(0xFF8EC5FC),
-                child: Text(emoji),
+              const CircleAvatar(
+                backgroundColor: Color(0xFF8EC5FC),
+                child: Icon(Icons.person, color: Colors.white),
               ),
               const SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  Text(
-                    time,
-                    style: const TextStyle(color: Colors.black45, fontSize: 12),
-                  ),
-                ],
+              Text(
+                userName,
+                style: const TextStyle(fontWeight: FontWeight.w700),
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          Text(content, style: const TextStyle(height: 1.5)),
+          if (imageUrl != null && imageUrl.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(
+                imageUrl,
+                height: 160,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+              ),
+            ),
+          ],
+          if (caption.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(caption, style: const TextStyle(height: 1.5)),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ─── POST UPDATE PAGE ────────────────────────────────────────────────────────
+
+class PostUpdatePage extends ConsumerStatefulWidget {
+  const PostUpdatePage({super.key});
+
+  @override
+  ConsumerState<PostUpdatePage> createState() => _PostUpdatePageState();
+}
+
+class _PostUpdatePageState extends ConsumerState<PostUpdatePage> {
+  final _captionController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _captionController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submitPost() async {
+    if (_captionController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please write something!')));
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final client = ref.read(apiClientProvider);
+      await client.post(
+        '/posts',
+        data: {'caption': _captionController.text.trim()},
+      );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Post shared! ✅')));
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(20, 52, 20, 24),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF8EC5FC), Color(0xFFE0C3FC)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(24),
+                bottomRight: Radius.circular(24),
+              ),
+            ),
+            child: Row(
+              children: [
+                InkWell(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.25),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.arrow_back, color: Colors.white),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Post Update 📝',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Text(
+                      'Share with the community',
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'What\'s on your mind?',
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF5F7FF),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: const [
+                        BoxShadow(color: Colors.black12, blurRadius: 6),
+                      ],
+                    ),
+                    child: TextField(
+                      controller: _captionController,
+                      maxLines: 6,
+                      decoration: const InputDecoration(
+                        hintText: 'Share an update, activity or achievement...',
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.all(16),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(14),
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF8EC5FC), Color(0xFFE0C3FC)],
+                        ),
+                      ),
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        onPressed: _isLoading ? null : _submitPost,
+                        icon: _isLoading
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(Icons.send, color: Colors.white),
+                        label: Text(
+                          _isLoading ? 'Posting...' : 'Share Post',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
