@@ -1,8 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:riverpod/legacy.dart';
 
 import '../../data/models/auth_api_model.dart';
 import '../../data/repositories/auth_api_repository.dart';
+
+const _tokenKey = 'auth_token';
+const _storage = FlutterSecureStorage();
 
 final authViewModelProvider = StateNotifierProvider<AuthViewModel, AuthState>((
   ref,
@@ -30,7 +34,17 @@ class AuthState {
 class AuthViewModel extends StateNotifier<AuthState> {
   final AuthApiRepository _repo;
 
-  AuthViewModel(this._repo) : super(const AuthState());
+  AuthViewModel(this._repo) : super(const AuthState()) {
+    _loadToken();
+  }
+
+  // Load token on app start
+  Future<void> _loadToken() async {
+    final token = await _storage.read(key: _tokenKey);
+    if (token != null && token.isNotEmpty) {
+      state = state.copyWith(token: token);
+    }
+  }
 
   Future<bool> signup({
     required String fullName,
@@ -39,7 +53,6 @@ class AuthViewModel extends StateNotifier<AuthState> {
     required String password,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
-
     try {
       final model = AuthApiModel(
         fullName: fullName,
@@ -48,9 +61,7 @@ class AuthViewModel extends StateNotifier<AuthState> {
         password: password,
         role: "parent",
       );
-
       await _repo.register(model);
-
       state = state.copyWith(isLoading: false, error: null);
       return true;
     } catch (e) {
@@ -61,18 +72,18 @@ class AuthViewModel extends StateNotifier<AuthState> {
 
   Future<bool> login({required String email, required String password}) async {
     state = state.copyWith(isLoading: true, error: null);
-
     try {
       final res = await _repo.login(email, password);
-
       final token = res["token"]?.toString();
 
       if (token == null || token.isEmpty) {
         throw Exception("Token not found from backend");
       }
 
-      state = state.copyWith(isLoading: false, error: null, token: token);
+      // Save token to secure storage
+      await _storage.write(key: _tokenKey, value: token);
 
+      state = state.copyWith(isLoading: false, error: null, token: token);
       return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -80,7 +91,8 @@ class AuthViewModel extends StateNotifier<AuthState> {
     }
   }
 
-  void clearAuth() {
+  Future<void> clearAuth() async {
+    await _storage.delete(key: _tokenKey);
     state = const AuthState();
   }
 }

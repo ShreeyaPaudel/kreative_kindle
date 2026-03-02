@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../onboarding/presentation/pages/onboarding_page.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../../dashboard/presentation/pages/dashboard_page.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -33,9 +35,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeOut),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeOut));
     _scaleAnimation = Tween<double>(begin: 0.7, end: 1.0).animate(
       CurvedAnimation(parent: _scaleController, curve: Curves.elasticOut),
     );
@@ -47,13 +50,35 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     _fadeController.forward();
   }
 
+  // Future<void> _navigateToNext() async {
+  //   await Future.delayed(const Duration(seconds: 3));
+  //   if (!mounted) return;
+  //   Navigator.pushReplacement(
+  //     context,
+  //     MaterialPageRoute(builder: (_) => const OnboardingPage()),
+  //   );
+  // }
+
   Future<void> _navigateToNext() async {
     await Future.delayed(const Duration(seconds: 3));
     if (!mounted) return;
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const OnboardingPage()),
-    );
+
+    const storage = FlutterSecureStorage();
+    final token = await storage.read(key: 'auth_token');
+
+    if (!mounted) return;
+
+    if (token != null && token.isNotEmpty) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => DashboardPage(role: 'parent')),
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const OnboardingPage()),
+      );
+    }
   }
 
   @override
