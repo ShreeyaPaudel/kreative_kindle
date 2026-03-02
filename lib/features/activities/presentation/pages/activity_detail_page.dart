@@ -14,10 +14,146 @@ class ActivityDetailPage extends StatelessWidget {
     required this.category,
   });
 
+  // Unique content per activity
+  Map<String, dynamic> get _activityData {
+    final Map<String, Map<String, dynamic>> data = {
+      'Rainbow Paper Craft': {
+        'description':
+            'A colourful craft activity where children create beautiful rainbow artwork using paper strips. This boosts fine motor skills, colour recognition, and creativity.',
+        'ageGroup': '3-6 yrs',
+        'level': 'Beginner',
+        'materials': [
+          '📄 Coloured paper strips',
+          '✂️ Child-safe scissors',
+          '🧴 Glue stick',
+          '✏️ Pencil',
+        ],
+        'steps': [
+          'Cut coloured paper into strips of equal size',
+          'Arrange strips in rainbow colour order (red, orange, yellow, green, blue, purple)',
+          'Glue each strip onto white paper in a curved shape',
+          'Add cotton wool clouds at the ends',
+          'Let dry and display your rainbow!',
+        ],
+      },
+      'Shape Sorting Game': {
+        'description':
+            'An interactive game where children match and sort shapes by colour and size. Develops logical thinking, spatial awareness, and problem-solving skills.',
+        'ageGroup': '2-5 yrs',
+        'level': 'Beginner',
+        'materials': [
+          '🔷 Shape cutouts (circle, square, triangle)',
+          '🎨 Coloured markers',
+          '📦 Sorting box with holes',
+        ],
+        'steps': [
+          'Lay out all shape cutouts on the table',
+          'Ask your child to identify each shape by name',
+          'Sort shapes by colour first, then by size',
+          'Try matching shapes to the correct holes in the box',
+          'Celebrate each correct match with encouragement!',
+        ],
+      },
+      'Finger Painting': {
+        'description':
+            'A sensory art activity using fingers as paintbrushes. Encourages self-expression, sensory exploration, and develops hand-eye coordination.',
+        'ageGroup': '2-6 yrs',
+        'level': 'Beginner',
+        'materials': [
+          '🎨 Non-toxic finger paint',
+          '📄 Large white paper',
+          '🧴 Baby wipes for cleanup',
+          '👕 Old shirt/apron',
+        ],
+        'steps': [
+          'Cover the table with newspaper and put on an apron',
+          'Squeeze small amounts of different paint colours onto a palette',
+          'Dip fingers into paint and press onto paper',
+          'Try making handprints, swirls, and dots',
+          'Let the painting dry completely before displaying',
+        ],
+      },
+      'Story Building': {
+        'description':
+            'A creative storytelling activity where children build their own stories using picture cards. Develops language skills, imagination, and narrative thinking.',
+        'ageGroup': '4-7 yrs',
+        'level': 'Intermediate',
+        'materials': [
+          '🃏 Picture story cards',
+          '📖 Blank story book',
+          '🖍️ Crayons',
+          '⭐ Sticker rewards',
+        ],
+        'steps': [
+          'Spread picture cards face down on the table',
+          'Child picks 3 random cards',
+          'Ask them: "Can you make a story with these pictures?"',
+          'Help them draw their story in the blank book',
+          'Read the story back together and celebrate!',
+        ],
+      },
+      'Number Puzzles': {
+        'description':
+            'Fun number matching and counting puzzles that make maths enjoyable. Builds number recognition, counting skills, and basic arithmetic.',
+        'ageGroup': '3-6 yrs',
+        'level': 'Beginner',
+        'materials': [
+          '🔢 Number puzzle cards (1-10)',
+          '🟡 Counting tokens/beads',
+          '📝 Worksheet',
+          '✏️ Pencil',
+        ],
+        'steps': [
+          'Lay out number cards 1-10 in order',
+          'Count out the matching number of tokens for each card',
+          'Mix up the cards and ask child to reorder them',
+          'Try the worksheet — trace numbers and draw matching dots',
+          'Award a sticker for every completed puzzle!',
+        ],
+      },
+      'Nature Walk': {
+        'description':
+            'An outdoor exploration activity where children discover the natural world. Encourages curiosity, observation skills, and appreciation for nature.',
+        'ageGroup': '3-8 yrs',
+        'level': 'Beginner',
+        'materials': [
+          '🎒 Small backpack',
+          '🔍 Magnifying glass',
+          '📋 Nature checklist',
+          '🫙 Collection jar',
+        ],
+        'steps': [
+          'Print or draw a nature checklist (leaf, flower, rock, bug, bird)',
+          'Head to a park or garden with your child',
+          'Use the magnifying glass to examine small things closely',
+          'Collect safe items like leaves, pebbles, and seed pods',
+          'Come home and identify everything you collected!',
+        ],
+      },
+    };
+
+    return data[title] ??
+        {
+          'description':
+              'A fun and engaging activity designed to support your child\'s development.',
+          'ageGroup': '3-6 yrs',
+          'level': 'Beginner',
+          'materials': ['📄 Paper', '✏️ Pencil', '🎨 Colours'],
+          'steps': [
+            'Prepare your materials',
+            'Follow the instructions',
+            'Have fun!',
+          ],
+        };
+  }
+
   @override
   Widget build(BuildContext context) {
+    final data = _activityData;
+    final materials = List<String>.from(data['materials']);
+    final steps = List<String>.from(data['steps']);
+
     return Scaffold(
-      backgroundColor: Colors.white,
       body: Column(
         children: [
           // Header
@@ -79,11 +215,11 @@ class ActivityDetailPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Overview card
+                  // Stats row
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF5F7FF),
+                      color: Theme.of(context).cardColor,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: const [
                         BoxShadow(color: Colors.black12, blurRadius: 6),
@@ -92,92 +228,47 @@ class ActivityDetailPage extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _statItem(Icons.timer, duration, 'Duration'),
-                        _statItem(Icons.star, 'Beginner', 'Level'),
-                        _statItem(Icons.people, '3-6 yrs', 'Age Group'),
+                        _statItem(context, Icons.timer, duration, 'Duration'),
+                        _statItem(context, Icons.star, data['level'], 'Level'),
+                        _statItem(
+                          context,
+                          Icons.people,
+                          data['ageGroup'],
+                          'Age Group',
+                        ),
                       ],
                     ),
                   ),
 
                   const SizedBox(height: 20),
 
-                  const Text(
-                    'About this Activity',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-                  ),
-                  const SizedBox(height: 10),
+                  _sectionTitle(context, 'About this Activity'),
+                  const SizedBox(height: 8),
                   Text(
-                    'This activity is designed to spark creativity and support early childhood development. '
-                    'It encourages imagination, fine motor skills, and cognitive development through '
-                    'fun and engaging hands-on learning.',
-                    style: TextStyle(color: Colors.grey.shade700, height: 1.6),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  const Text(
-                    'Materials Needed',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-                  ),
-                  const SizedBox(height: 10),
-                  _materialItem('📄 Coloured paper'),
-                  _materialItem('✂️ Child-safe scissors'),
-                  _materialItem('🖍️ Crayons or markers'),
-                  _materialItem('🧴 Glue stick'),
-
-                  const SizedBox(height: 20),
-
-                  const Text(
-                    'Steps',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-                  ),
-                  const SizedBox(height: 10),
-                  _stepItem(1, 'Gather all materials on a flat surface'),
-                  _stepItem(2, 'Let your child choose their favourite colours'),
-                  _stepItem(3, 'Follow the activity instructions together'),
-                  _stepItem(4, 'Encourage creativity — there\'s no wrong way!'),
-                  _stepItem(5, 'Display the finished work proudly'),
-
-                  const SizedBox(height: 30),
-
-                  // Start button
-                  SizedBox(
-                    width: double.infinity,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(14),
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF8EC5FC), Color(0xFFE0C3FC)],
-                        ),
-                      ),
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Activity started! Have fun! 🎉'),
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.play_arrow, color: Colors.white),
-                        label: const Text(
-                          'Start Activity',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
+                    data['description'],
+                    style: TextStyle(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey.shade300
+                          : Colors.grey.shade700,
+                      height: 1.6,
                     ),
                   ),
+
+                  const SizedBox(height: 20),
+
+                  _sectionTitle(context, 'Materials Needed'),
+                  const SizedBox(height: 8),
+                  ...materials.map((m) => _materialItem(context, m)),
+
+                  const SizedBox(height: 20),
+
+                  _sectionTitle(context, 'Steps'),
+                  const SizedBox(height: 8),
+                  ...steps.asMap().entries.map(
+                    (e) => _stepItem(context, e.key + 1, e.value),
+                  ),
+
+                  const SizedBox(height: 30),
                 ],
               ),
             ),
@@ -187,7 +278,19 @@ class ActivityDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _statItem(IconData icon, String value, String label) {
+  Widget _sectionTitle(BuildContext context, String title) {
+    return Text(
+      title,
+      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+    );
+  }
+
+  Widget _statItem(
+    BuildContext context,
+    IconData icon,
+    String value,
+    String label,
+  ) {
     return Column(
       children: [
         Icon(icon, color: const Color(0xFF8EC5FC), size: 24),
@@ -198,22 +301,32 @@ class ActivityDetailPage extends StatelessWidget {
         ),
         Text(
           label,
-          style: const TextStyle(color: Colors.black45, fontSize: 11),
+          style: TextStyle(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.grey.shade400
+                : Colors.black45,
+            fontSize: 11,
+          ),
         ),
       ],
     );
   }
 
-  Widget _materialItem(String text) {
+  Widget _materialItem(BuildContext context, String text) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Text(text, style: const TextStyle(fontSize: 14, height: 1.5)),
+      child: Row(
+        children: [
+          const SizedBox(width: 4),
+          Text(text, style: const TextStyle(fontSize: 14, height: 1.5)),
+        ],
+      ),
     );
   }
 
-  Widget _stepItem(int step, String text) {
+  Widget _stepItem(BuildContext context, int step, String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

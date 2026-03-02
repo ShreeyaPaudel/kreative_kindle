@@ -12,25 +12,18 @@ class KreativeKindleApp extends ConsumerWidget {
     final isDark = ref.watch(themeProvider);
 
     SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
+      SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
       ),
     );
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Kreative Kindle',
       themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.light,
-        colorSchemeSeed: const Color(0xFF8EC5FC),
-      ),
-      darkTheme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        colorSchemeSeed: const Color(0xFF8EC5FC),
-      ),
+      theme: lightTheme,
+      darkTheme: darkTheme,
       home: SplashScreen(),
     );
   }
