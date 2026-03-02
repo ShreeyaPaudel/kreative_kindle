@@ -352,7 +352,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   icon: Icons.post_add,
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const UpdatesPage()),
+                    MaterialPageRoute(builder: (_) => const PostUpdatePage()),
                   ),
                 ),
                 FeatureTile(
