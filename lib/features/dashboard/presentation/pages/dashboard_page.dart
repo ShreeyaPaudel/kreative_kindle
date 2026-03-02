@@ -7,7 +7,7 @@ import './settings_page.dart';
 import './updates_page.dart';
 import './progress_page.dart';
 import './more_page.dart';
-import '../../../../features/dashboard/presentation/pages/settings_page.dart';
+
 import '../../../../core/widgets/offline_banner.dart';
 import '../../../../core/services/sensors/accelerometer_screen.dart';
 
@@ -27,12 +27,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   @override
   Widget build(BuildContext context) {
     final pages = [
-      const Center(child: Text("Updates", style: TextStyle(fontSize: 18))),
+      // const Center(child: Text("Updates", style: TextStyle(fontSize: 18))),
       const UpdatesPage(),
       const SettingsPage(),
       _homeUi(),
       ProfilePage(role: widget.role),
-      const Center(child: Text("More", style: TextStyle(fontSize: 18))),
+      const MorePage(),
     ];
 
     return Scaffold(
