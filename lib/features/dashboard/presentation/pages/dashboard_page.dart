@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kreative_kindle/features/activities/presentation/pages/activities_page.dart';
 import '../widgets/feature_tile.dart';
 import './profile_page.dart';
+import './settings_page.dart';
+import './updates_page.dart';
+import './progress_page.dart';
+import './more_page.dart';
 import '../../../../features/dashboard/presentation/pages/settings_page.dart';
 import '../../../../core/widgets/offline_banner.dart';
 import '../../../../core/services/sensors/accelerometer_screen.dart';
@@ -23,6 +28,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   Widget build(BuildContext context) {
     final pages = [
       const Center(child: Text("Updates", style: TextStyle(fontSize: 18))),
+      const UpdatesPage(),
       const SettingsPage(),
       _homeUi(),
       ProfilePage(role: widget.role),
@@ -274,21 +280,93 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
               crossAxisSpacing: 20,
               mainAxisSpacing: 20,
               childAspectRatio: 1.1,
-              children: const [
-                FeatureTile(title: "Craft Corner", icon: Icons.palette),
+              children: [
+                FeatureTile(
+                  title: "Craft Corner",
+                  icon: Icons.palette,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          const ActivitiesPage(category: 'Craft Corner'),
+                    ),
+                  ),
+                ),
                 FeatureTile(
                   title: "Letters & Phonics",
                   icon: Icons.text_fields,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          const ActivitiesPage(category: 'Letters & Phonics'),
+                    ),
+                  ),
                 ),
-                FeatureTile(title: "Story Time", icon: Icons.book),
-                FeatureTile(title: "Numbers & Logic", icon: Icons.calculate),
-                FeatureTile(title: "Thinking Skills", icon: Icons.psychology),
-                FeatureTile(title: "Science & Nature", icon: Icons.eco),
-                FeatureTile(title: "Post Update", icon: Icons.post_add),
-                FeatureTile(title: "Learning Progress", icon: Icons.show_chart),
+                FeatureTile(
+                  title: "Story Time",
+                  icon: Icons.book,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          const ActivitiesPage(category: 'Story Time'),
+                    ),
+                  ),
+                ),
+                FeatureTile(
+                  title: "Numbers & Logic",
+                  icon: Icons.calculate,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          const ActivitiesPage(category: 'Numbers & Logic'),
+                    ),
+                  ),
+                ),
+                FeatureTile(
+                  title: "Thinking Skills",
+                  icon: Icons.psychology,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          const ActivitiesPage(category: 'Thinking Skills'),
+                    ),
+                  ),
+                ),
+                FeatureTile(
+                  title: "Science & Nature",
+                  icon: Icons.eco,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          const ActivitiesPage(category: 'Science & Nature'),
+                    ),
+                  ),
+                ),
+                FeatureTile(
+                  title: "Post Update",
+                  icon: Icons.post_add,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const UpdatesPage()),
+                  ),
+                ),
+                FeatureTile(
+                  title: "Learning Progress",
+                  icon: Icons.show_chart,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ProgressPage()),
+                  ),
+                ),
                 FeatureTile(
                   title: "Rewards & Badges",
                   icon: Icons.workspace_premium,
+                  onTap: () {},
                 ),
               ],
             ),
