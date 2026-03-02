@@ -5,12 +5,11 @@ import '../../../../core/api/api_client.dart';
 final postsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final client = ref.read(apiClientProvider);
   final res = await client.get('/posts');
-
   if (res.data is List) {
-    return (res.data as List).cast<Map<String, dynamic>>();
+    return (res.data as List).map((e) => Map<String, dynamic>.from(e)).toList();
   }
-  final List data = res.data['data'] ?? res.data['posts'] ?? [];
-  return data.cast<Map<String, dynamic>>();
+  final raw = res.data['data'] ?? res.data['posts'] ?? [];
+  return (raw as List).map((e) => Map<String, dynamic>.from(e)).toList();
 });
 
 class UpdatesPage extends ConsumerWidget {
