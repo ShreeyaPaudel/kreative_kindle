@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'activity_detail_page.dart';
 
 class ActivitiesPage extends StatelessWidget {
   final String category;
@@ -19,7 +20,6 @@ class ActivitiesPage extends StatelessWidget {
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          // Header
           Container(
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(20, 52, 20, 24),
@@ -68,83 +68,94 @@ class ActivitiesPage extends StatelessWidget {
               ],
             ),
           ),
-
-          // Activity list
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(20),
               itemCount: activities.length,
               itemBuilder: (context, index) {
                 final activity = activities[index];
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 14),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF5F7FF),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: const [
-                      BoxShadow(color: Colors.black12, blurRadius: 6),
-                    ],
+                return GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ActivityDetailPage(
+                        title: activity['title']!,
+                        emoji: activity['emoji']!,
+                        duration: activity['duration']!,
+                        category: category,
+                      ),
+                    ),
                   ),
-                  child: Row(
-                    children: [
-                      Text(
-                        activity['emoji']!,
-                        style: const TextStyle(fontSize: 36),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              activity['title']!,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 15,
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 14),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF5F7FF),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: const [
+                        BoxShadow(color: Colors.black12, blurRadius: 6),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Text(
+                          activity['emoji']!,
+                          style: const TextStyle(fontSize: 36),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                activity['title']!,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.timer,
-                                  size: 14,
-                                  color: Colors.black45,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  activity['duration']!,
-                                  style: const TextStyle(
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.timer,
+                                    size: 14,
                                     color: Colors.black45,
-                                    fontSize: 12,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    activity['duration']!,
+                                    style: const TextStyle(
+                                      color: Colors.black45,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF8EC5FC), Color(0xFFE0C3FC)],
                             ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF8EC5FC), Color(0xFFE0C3FC)],
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Text(
-                          'Start',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
+                          child: const Text(
+                            'View →',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 );
               },

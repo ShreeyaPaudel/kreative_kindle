@@ -2,30 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kreative_kindle/features/auth/presentation/pages/login_screen.dart';
 import '../../../media/presentation/pages/upload_image.dart';
-
-import '../../presentation/pages/dashboard_page.dart';
 import '../../../auth/presentation/view_model/auth_viewmodel.dart';
+import '../../../../core/providers/theme_provider.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = ref.watch(themeProvider);
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // ✅ HEADER (theme match)
             _header(context),
-
             const SizedBox(height: 18),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 children: [
-                  // ✅ ACCOUNT SECTION
                   _sectionTitle("Account"),
                   const SizedBox(height: 10),
                   _settingsCard(
@@ -52,18 +49,37 @@ class SettingsPage extends ConsumerWidget {
 
                   const SizedBox(height: 18),
 
-                  // ✅ APP SECTION
                   _sectionTitle("App"),
                   const SizedBox(height: 10),
                   _settingsCard(
                     child: Column(
                       children: [
-                        _tile(
-                          context,
-                          icon: Icons.palette_outlined,
-                          title: "Theme",
-                          subtitle: "Light mode / Dark mode (later)",
-                          onTap: () => _soon(context),
+                        // Theme toggle
+                        ListTile(
+                          onTap: () =>
+                              ref.read(themeProvider.notifier).toggleTheme(),
+                          leading: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFF4E8),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: Icon(
+                              isDark ? Icons.dark_mode : Icons.light_mode,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          title: const Text(
+                            "Theme",
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                          subtitle: Text(isDark ? "Dark mode" : "Light mode"),
+                          trailing: Switch(
+                            value: isDark,
+                            onChanged: (_) =>
+                                ref.read(themeProvider.notifier).toggleTheme(),
+                            activeColor: const Color(0xFF8EC5FC),
+                          ),
                         ),
                         _divider(),
                         _tile(
@@ -102,7 +118,6 @@ class SettingsPage extends ConsumerWidget {
 
                   const SizedBox(height: 18),
 
-                  // ✅ SUPPORT SECTION
                   _sectionTitle("Support"),
                   const SizedBox(height: 10),
                   _settingsCard(
@@ -137,7 +152,6 @@ class SettingsPage extends ConsumerWidget {
 
                   const SizedBox(height: 22),
 
-                  // ✅ LOGOUT BUTTON (real working)
                   SizedBox(
                     width: double.infinity,
                     child: Container(
@@ -170,10 +184,7 @@ class SettingsPage extends ConsumerWidget {
                           ),
                         ),
                         onPressed: () {
-                          // ✅ clear auth state
                           ref.read(authViewModelProvider.notifier).clearAuth();
-
-                          // ✅ back to login (remove all routes)
                           Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(
@@ -187,13 +198,10 @@ class SettingsPage extends ConsumerWidget {
                   ),
 
                   const SizedBox(height: 14),
-
-                  // ✅ VERSION FOOTER
                   const Text(
                     "Kreative Kindle • v1.0",
                     style: TextStyle(color: Colors.black45),
                   ),
-
                   const SizedBox(height: 30),
                 ],
               ),
@@ -203,8 +211,6 @@ class SettingsPage extends ConsumerWidget {
       ),
     );
   }
-
-  // ================= UI PARTS =================
 
   Widget _header(BuildContext context) {
     return Container(

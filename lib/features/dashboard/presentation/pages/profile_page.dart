@@ -1,13 +1,59 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+import '../../../../features/auth/data/repositories/user_repository.dart';
+import '../../../media/presentation/view_model/media_viewmodel.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends ConsumerStatefulWidget {
   final String role;
   const ProfilePage({super.key, required this.role});
 
-  bool get isParent => role.toLowerCase() == "parent";
+  @override
+  ConsumerState<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends ConsumerState<ProfilePage> {
+  Map<String, dynamic>? _userData;
+  File? _selectedImage;
+  final ImagePicker _picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    final data = await ref.read(userRepositoryProvider).getLoggedInUser();
+    setState(() => _userData = data);
+  }
+
+  Future<void> _pickAndUpload() async {
+    final x = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
+    if (x == null) return;
+    setState(() => _selectedImage = File(x.path));
+    await ref.read(mediaViewModelProvider.notifier).upload(File(x.path));
+    final state = ref.read(mediaViewModelProvider);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          state.error != null ? state.error! : 'Profile photo updated! ✅',
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final mediaState = ref.watch(mediaViewModelProvider);
+    final name = _userData?['fullName'] ?? _userData?['name'] ?? 'Parent';
+    final email = _userData?['email'] ?? '';
+
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.all(20),
@@ -18,8 +64,9 @@ class ProfilePage extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
+          // Profile card
           Container(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [Color(0xFF8EC5FC), Color(0xFFE0C3FC)],
@@ -28,18 +75,55 @@ class ProfilePage extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const CircleAvatar(
-                  radius: 28,
-                  backgroundColor: Colors.white,
-                  child: Icon(Icons.person, size: 32, color: Colors.black54),
+                GestureDetector(
+                  onTap: _pickAndUpload,
+                  child: Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 36,
+                        backgroundColor: Colors.white,
+                        backgroundImage: _selectedImage != null
+                            ? FileImage(_selectedImage!)
+                            : mediaState.imageUrl != null
+                            ? NetworkImage(mediaState.imageUrl!)
+                                  as ImageProvider
+                            : null,
+                        child:
+                            (_selectedImage == null &&
+                                mediaState.imageUrl == null)
+                            ? const Icon(
+                                Icons.person,
+                                size: 38,
+                                color: Colors.black45,
+                              )
+                            : null,
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.camera_alt,
+                            size: 14,
+                            color: Colors.black54,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        isParent ? "Parent" : "Instructor",
+                        name,
                         style: const TextStyle(
                           fontSize: 18,
                           color: Colors.white,
@@ -48,8 +132,30 @@ class ProfilePage extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        "Role: $role",
-                        style: const TextStyle(color: Colors.white70),
+                        email,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.25),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Text(
+                          'Parent',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -60,49 +166,64 @@ class ProfilePage extends StatelessWidget {
 
           const SizedBox(height: 16),
 
+          // Child info card
           _infoCard(
-            title: isParent ? "Child Info" : "Class Info",
-            rows: isParent
-                ? const [
-                    ("Child", "Demo Child"),
-                    ("Age", "4 years"),
-                    ("Level", "Beginner"),
-                  ]
-                : const [
-                    ("Room", "Butterfly"),
-                    ("Focus", "Creative learning"),
-                    ("Experience", "1+ year"),
-                  ],
+            title: "Child Info",
+            rows: const [
+              ("Child", "Demo Child"),
+              ("Age", "4 years"),
+              ("Level", "Beginner"),
+            ],
           ),
 
           const SizedBox(height: 16),
 
+          // Account info
           _infoCard(
-            title: "Actions",
-            child: Column(
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.edit),
-                  title: const Text("Edit Profile (demo)"),
-                  onTap: () {},
+            title: "Account Info",
+            rows: [("Name", name), ("Email", email), ("Role", "Parent")],
+          ),
+
+          const SizedBox(height: 16),
+
+          // Upload photo button
+          SizedBox(
+            width: double.infinity,
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF8EC5FC), Color(0xFFE0C3FC)],
                 ),
-                ListTile(
-                  leading: const Icon(Icons.lock),
-                  title: const Text("Change Password (demo)"),
-                  onTap: () {},
+              ),
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
-                ListTile(
-                  leading: const Icon(Icons.logout),
-                  title: const Text("Logout"),
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Logout tapped (wire later)"),
-                      ),
-                    );
-                  },
+                icon: mediaState.loading
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.camera_alt, color: Colors.white),
+                label: Text(
+                  mediaState.loading ? 'Uploading...' : 'Update Profile Photo',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ],
+                onPressed: mediaState.loading ? null : _pickAndUpload,
+              ),
             ),
           ),
         ],
@@ -112,8 +233,7 @@ class ProfilePage extends StatelessWidget {
 
   Widget _infoCard({
     required String title,
-    List<(String, String)> rows = const [],
-    Widget? child,
+    required List<(String, String)> rows,
   }) {
     return Container(
       padding: const EdgeInsets.all(18),
@@ -130,23 +250,21 @@ class ProfilePage extends StatelessWidget {
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 10),
-          if (rows.isNotEmpty)
-            ...rows.map(
-              (r) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(r.$1, style: const TextStyle(color: Colors.black54)),
-                    Text(
-                      r.$2,
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                  ],
-                ),
+          ...rows.map(
+            (r) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(r.$1, style: const TextStyle(color: Colors.black54)),
+                  Text(
+                    r.$2,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ],
               ),
             ),
-          if (child != null) child,
+          ),
         ],
       ),
     );
