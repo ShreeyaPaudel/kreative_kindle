@@ -50,25 +50,26 @@ class UpdatesPage extends ConsumerWidget {
               ),
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Updates 📢',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Updates 📢',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'Latest posts and announcements',
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                  ],
+                      SizedBox(height: 4),
+                      Text(
+                        'Latest posts and announcements',
+                        style: TextStyle(color: Colors.white70),
+                      ),
+                    ],
+                  ),
                 ),
                 GestureDetector(
                   onTap: () => Navigator.push(
@@ -153,9 +154,12 @@ class _PostCard extends StatelessWidget {
                 child: Icon(Icons.person, color: Colors.white),
               ),
               const SizedBox(width: 10),
-              Text(
-                userName.toString(),
-                style: const TextStyle(fontWeight: FontWeight.w700),
+              Expanded(
+                child: Text(
+                  userName.toString(),
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ),
@@ -332,22 +336,24 @@ class _PostUpdatePageState extends ConsumerState<PostUpdatePage> {
                   ),
                 ),
                 const SizedBox(width: 14),
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Post Update 📝',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Post Update 📝',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
                       ),
-                    ),
-                    Text(
-                      'Share with the community',
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                  ],
+                      Text(
+                        'Share with the community',
+                        style: TextStyle(color: Colors.white70),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
