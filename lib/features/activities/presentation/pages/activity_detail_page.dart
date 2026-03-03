@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:proximity_sensor/proximity_sensor.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 
-class ActivityDetailPage extends StatelessWidget {
+class ActivityDetailPage extends StatefulWidget {
   final String title;
   final String emoji;
   final String duration;
@@ -13,6 +16,20 @@ class ActivityDetailPage extends StatelessWidget {
     required this.duration,
     required this.category,
   });
+
+  @override
+  State<ActivityDetailPage> createState() => _ActivityDetailPageState();
+}
+
+class _ActivityDetailPageState extends State<ActivityDetailPage> {
+  // ── Step navigator state (gyroscope) ──────────────────────────────────────
+  int _currentStep = 0;
+  bool _gyroDebounce = false;
+  StreamSubscription<GyroscopeEvent>? _gyroSub;
+
+  // ── Pause state (proximity) ────────────────────────────────────────────────
+  bool _isPaused = false;
+  StreamSubscription<dynamic>? _proxSub;
 
   // Unique content per activity
   Map<String, dynamic> get _activityData {
@@ -132,7 +149,7 @@ class ActivityDetailPage extends StatelessWidget {
       },
     };
 
-    return data[title] ??
+    return data[widget.title] ??
         {
           'description':
               'A fun and engaging activity designed to support your child\'s development.',
@@ -148,133 +165,290 @@ class ActivityDetailPage extends StatelessWidget {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _startGyroscope();
+    _startProximity();
+  }
+
+  // ── Gyroscope: tilt left/right to navigate steps ─────────────────────────
+  void _startGyroscope() {
+    _gyroSub = gyroscopeEventStream().listen((event) {
+      if (_gyroDebounce) return;
+      final steps = List<String>.from(_activityData['steps']);
+
+      if (event.y > 2.5 && _currentStep < steps.length - 1) {
+        // Tilt right → next step
+        _gyroDebounce = true;
+        setState(() => _currentStep++);
+        Future.delayed(
+          const Duration(milliseconds: 700),
+          () => _gyroDebounce = false,
+        );
+      } else if (event.y < -2.5 && _currentStep > 0) {
+        // Tilt left → previous step
+        _gyroDebounce = true;
+        setState(() => _currentStep--);
+        Future.delayed(
+          const Duration(milliseconds: 700),
+          () => _gyroDebounce = false,
+        );
+      }
+    });
+  }
+
+  // ── Proximity: face-down to pause activity ───────────────────────────────
+  void _startProximity() {
+    _proxSub = ProximitySensor.events.listen((event) {
+      final isNear = (event == 0);
+      if (isNear != _isPaused && mounted) {
+        setState(() => _isPaused = isNear);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _gyroSub?.cancel();
+    _proxSub?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final data = _activityData;
     final materials = List<String>.from(data['materials']);
     final steps = List<String>.from(data['steps']);
 
-    return Scaffold(
-      body: Column(
-        children: [
-          // Header
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(20, 52, 20, 24),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF8EC5FC), Color(0xFFE0C3FC)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(24),
-                bottomRight: Radius.circular(24),
-              ),
-            ),
-            child: Row(
-              children: [
-                InkWell(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.25),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Icons.arrow_back, color: Colors.white),
+    return Stack(
+      children: [
+        Scaffold(
+          body: Column(
+            children: [
+              // Header
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(20, 52, 20, 24),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF8EC5FC), Color(0xFFE0C3FC)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(24),
+                    bottomRight: Radius.circular(24),
                   ),
                 ),
-                const SizedBox(width: 14),
-                Expanded(
+                child: Row(
+                  children: [
+                    InkWell(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.25),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.arrow_back, color: Colors.white),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.title,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
+                          ),
+                          Text(
+                            widget.category,
+                            style: const TextStyle(color: Colors.white70),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      widget.emoji,
+                      style: const TextStyle(fontSize: 36),
+                    ),
+                  ],
+                ),
+              ),
+
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
+                      // Stats row
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).cardColor,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: const [
+                            BoxShadow(color: Colors.black12, blurRadius: 6),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _statItem(
+                              context,
+                              Icons.timer,
+                              widget.duration,
+                              'Duration',
+                            ),
+                            _statItem(
+                              context,
+                              Icons.star,
+                              data['level'],
+                              'Level',
+                            ),
+                            _statItem(
+                              context,
+                              Icons.people,
+                              data['ageGroup'],
+                              'Age Group',
+                            ),
+                          ],
                         ),
                       ),
+
+                      const SizedBox(height: 20),
+
+                      _sectionTitle(context, 'About this Activity'),
+                      const SizedBox(height: 8),
                       Text(
-                        category,
-                        style: const TextStyle(color: Colors.white70),
+                        data['description'],
+                        style: TextStyle(
+                          color:
+                              Theme.of(context).brightness == Brightness.dark
+                                  ? Colors.grey.shade300
+                                  : Colors.grey.shade700,
+                          height: 1.6,
+                        ),
                       ),
+
+                      const SizedBox(height: 20),
+
+                      _sectionTitle(context, 'Materials Needed'),
+                      const SizedBox(height: 8),
+                      ...materials.map((m) => _materialItem(context, m)),
+
+                      const SizedBox(height: 20),
+
+                      // Steps with gyroscope navigation hint
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _sectionTitle(context, 'Steps'),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF8EC5FC)
+                                  .withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.screen_rotation,
+                                  size: 14,
+                                  color: Color(0xFF8EC5FC),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${_currentStep + 1}/${steps.length}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFF8EC5FC),
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      // Tilt hint
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 6),
+                        child: Text(
+                          '← Tilt phone left/right to navigate steps →',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.black38,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 4),
+
+                      ...steps.asMap().entries.map(
+                        (e) => _stepItem(
+                          context,
+                          e.key + 1,
+                          e.value,
+                          isActive: e.key == _currentStep,
+                        ),
+                      ),
+
+                      const SizedBox(height: 30),
                     ],
                   ),
                 ),
-                Text(emoji, style: const TextStyle(fontSize: 36)),
-              ],
-            ),
+              ),
+            ],
           ),
+        ),
 
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        // ── Proximity pause overlay ──────────────────────────────────────────
+        if (_isPaused)
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withValues(alpha: 0.75),
+              child: const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Stats row
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).cardColor,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: const [
-                        BoxShadow(color: Colors.black12, blurRadius: 6),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _statItem(context, Icons.timer, duration, 'Duration'),
-                        _statItem(context, Icons.star, data['level'], 'Level'),
-                        _statItem(
-                          context,
-                          Icons.people,
-                          data['ageGroup'],
-                          'Age Group',
-                        ),
-                      ],
-                    ),
+                  Icon(
+                    Icons.pause_circle_filled,
+                    size: 72,
+                    color: Colors.white,
                   ),
-
-                  const SizedBox(height: 20),
-
-                  _sectionTitle(context, 'About this Activity'),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 16),
                   Text(
-                    data['description'],
+                    'Activity Paused',
                     style: TextStyle(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.grey.shade300
-                          : Colors.grey.shade700,
-                      height: 1.6,
+                      fontSize: 26,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
                     ),
                   ),
-
-                  const SizedBox(height: 20),
-
-                  _sectionTitle(context, 'Materials Needed'),
-                  const SizedBox(height: 8),
-                  ...materials.map((m) => _materialItem(context, m)),
-
-                  const SizedBox(height: 20),
-
-                  _sectionTitle(context, 'Steps'),
-                  const SizedBox(height: 8),
-                  ...steps.asMap().entries.map(
-                    (e) => _stepItem(context, e.key + 1, e.value),
+                  SizedBox(height: 8),
+                  Text(
+                    'Lift phone face-up to resume',
+                    style: TextStyle(color: Colors.white70, fontSize: 15),
                   ),
-
-                  const SizedBox(height: 30),
                 ],
               ),
             ),
           ),
-        ],
-      ),
+      ],
     );
   }
 
@@ -324,26 +498,47 @@ class ActivityDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _stepItem(BuildContext context, int step, String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+  Widget _stepItem(
+    BuildContext context,
+    int step,
+    String text, {
+    bool isActive = false,
+  }) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: isActive
+          ? const EdgeInsets.all(12)
+          : const EdgeInsets.only(bottom: 2),
+      decoration: isActive
+          ? BoxDecoration(
+              color: const Color(0xFF8EC5FC).withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: const Color(0xFF8EC5FC).withValues(alpha: 0.4),
+              ),
+            )
+          : null,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: 28,
             height: 28,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF8EC5FC), Color(0xFFE0C3FC)],
-              ),
+            decoration: BoxDecoration(
+              gradient: isActive
+                  ? const LinearGradient(
+                      colors: [Color(0xFF8EC5FC), Color(0xFFE0C3FC)],
+                    )
+                  : null,
+              color: isActive ? null : Colors.grey.shade200,
               shape: BoxShape.circle,
             ),
             child: Center(
               child: Text(
                 '$step',
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: isActive ? Colors.white : Colors.black45,
                   fontWeight: FontWeight.w800,
                   fontSize: 13,
                 ),
@@ -354,7 +549,15 @@ class ActivityDetailPage extends StatelessWidget {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(top: 4),
-              child: Text(text, style: const TextStyle(height: 1.5)),
+              child: Text(
+                text,
+                style: TextStyle(
+                  height: 1.5,
+                  fontWeight:
+                      isActive ? FontWeight.w700 : FontWeight.normal,
+                  color: isActive ? Colors.black87 : Colors.black54,
+                ),
+              ),
             ),
           ),
         ],

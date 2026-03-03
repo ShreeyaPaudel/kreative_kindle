@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../features/auth/data/repositories/user_repository.dart';
 import '../../../media/presentation/view_model/media_viewmodel.dart';
 
@@ -16,17 +17,27 @@ class ProfilePage extends ConsumerStatefulWidget {
 class _ProfilePageState extends ConsumerState<ProfilePage> {
   Map<String, dynamic>? _userData;
   File? _selectedImage;
+  String? _savedImageUrl;
   final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
     _loadUser();
+    _loadSavedImage();
   }
 
   Future<void> _loadUser() async {
     final data = await ref.read(userRepositoryProvider).getLoggedInUser();
     setState(() => _userData = data);
+  }
+
+  Future<void> _loadSavedImage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getString('profile_image_url');
+    if (saved != null && mounted) {
+      setState(() => _savedImageUrl = saved);
+    }
   }
 
   Future<void> _pickAndUpload() async {
@@ -38,6 +49,17 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     setState(() => _selectedImage = File(x.path));
     await ref.read(mediaViewModelProvider.notifier).upload(File(x.path));
     final state = ref.read(mediaViewModelProvider);
+
+    if (state.imageUrl != null) {
+      // Ensure we store a full URL so it survives app restarts
+      final fullUrl = state.imageUrl!.startsWith('http')
+          ? state.imageUrl!
+          : 'http://192.168.1.69:3001/uploads/${state.imageUrl!}';
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('profile_image_url', fullUrl);
+      if (mounted) setState(() => _savedImageUrl = fullUrl);
+    }
+
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -83,13 +105,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         radius: 36,
                         backgroundColor: Colors.white,
                         backgroundImage: _selectedImage != null
-                            ? FileImage(_selectedImage!)
-                            : mediaState.imageUrl != null
-                            ? NetworkImage(mediaState.imageUrl!)
-                                  as ImageProvider
+                            ? FileImage(_selectedImage!) as ImageProvider
+                            : (_savedImageUrl ?? mediaState.imageUrl) != null
+                            ? NetworkImage(
+                                    (_savedImageUrl ?? mediaState.imageUrl)!)
+                                as ImageProvider
                             : null,
-                        child:
-                            (_selectedImage == null &&
+                        child: (_selectedImage == null &&
+                                _savedImageUrl == null &&
                                 mediaState.imageUrl == null)
                             ? const Icon(
                                 Icons.person,

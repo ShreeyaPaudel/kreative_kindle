@@ -1,15 +1,17 @@
+import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 import 'package:kreative_kindle/features/activities/presentation/pages/activities_page.dart';
+import 'package:kreative_kindle/features/activities/presentation/pages/activity_detail_page.dart';
 import '../widgets/feature_tile.dart';
 import './profile_page.dart';
 import './settings_page.dart';
 import './updates_page.dart';
 import './progress_page.dart';
 import './more_page.dart';
-
 import '../../../../core/widgets/offline_banner.dart';
-import '../../../../core/services/sensors/accelerometer_screen.dart';
 
 class DashboardPage extends ConsumerStatefulWidget {
   final String role;
@@ -21,13 +23,110 @@ class DashboardPage extends ConsumerStatefulWidget {
 
 class _DashboardPageState extends ConsumerState<DashboardPage> {
   int index = 2;
+  StreamSubscription<AccelerometerEvent>? _shakeSub;
+  DateTime _lastShake = DateTime.now();
 
   bool get isParent => widget.role.toLowerCase() == "parent";
+
+  static const _shakeActivities = [
+    {
+      'title': 'Rainbow Paper Craft',
+      'emoji': '🌈',
+      'category': 'Craft Corner',
+      'duration': '10 mins',
+    },
+    {
+      'title': 'Shape Sorting Game',
+      'emoji': '🔷',
+      'category': 'Thinking Skills',
+      'duration': '15 mins',
+    },
+    {
+      'title': 'Finger Painting',
+      'emoji': '🎨',
+      'category': 'Craft Corner',
+      'duration': '20 mins',
+    },
+    {
+      'title': 'Story Building',
+      'emoji': '📖',
+      'category': 'Story Time',
+      'duration': '12 mins',
+    },
+    {
+      'title': 'Number Puzzles',
+      'emoji': '🔢',
+      'category': 'Numbers & Logic',
+      'duration': '10 mins',
+    },
+    {
+      'title': 'Nature Walk',
+      'emoji': '🌿',
+      'category': 'Science & Nature',
+      'duration': '25 mins',
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _startShakeListener();
+  }
+
+  @override
+  void dispose() {
+    _shakeSub?.cancel();
+    super.dispose();
+  }
+
+  void _startShakeListener() {
+    _shakeSub = accelerometerEventStream().listen((event) {
+      final magnitude =
+          sqrt(event.x * event.x + event.y * event.y + event.z * event.z);
+      if (magnitude > 15) {
+        final now = DateTime.now();
+        // Only trigger on home tab, and debounce to 1.5s
+        if (index == 2 &&
+            now.difference(_lastShake).inMilliseconds > 1500) {
+          _lastShake = now;
+          final activity =
+              _shakeActivities[Random().nextInt(_shakeActivities.length)];
+          _showActivitySuggestion(activity);
+        }
+      }
+    });
+  }
+
+  void _showActivitySuggestion(Map<String, String> activity) {
+    if (!mounted) return;
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => _ActivitySuggestionSheet(
+        activity: activity,
+        onStart: () {
+          Navigator.pop(context); // close sheet
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ActivityDetailPage(
+                title: activity['title']!,
+                emoji: activity['emoji']!,
+                duration: activity['duration']!,
+                category: activity['category']!,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final pages = [
-      // const Center(child: Text("Updates", style: TextStyle(fontSize: 18))),
       const UpdatesPage(),
       const SettingsPage(),
       _homeUi(),
@@ -140,7 +239,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                         const SizedBox(height: 4),
                         const Text(
                           "4 Y/O | Beginner",
-                          style: TextStyle(color: Colors.white70, fontSize: 14),
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                          ),
                         ),
                       ],
                     ),
@@ -167,53 +269,28 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
 
           const SizedBox(height: 20),
 
-          // Sensor tile
-          GestureDetector(
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const AccelerometerScreen()),
+          // Shake hint banner
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF0F4FF),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: const Color(0xFF8EC5FC).withValues(alpha: 0.4),
+              ),
             ),
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF8EC5FC), Color(0xFFE0C3FC)],
+            child: const Row(
+              children: [
+                Icon(Icons.vibration, color: Color(0xFF8EC5FC), size: 22),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    '🎲 Shake your phone to get a random activity suggestion!',
+                    style: TextStyle(fontSize: 13, color: Colors.black54),
+                  ),
                 ),
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: const [
-                  BoxShadow(color: Colors.black12, blurRadius: 6),
-                ],
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.sensors, color: Colors.white, size: 32),
-                  SizedBox(width: 14),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Motion Sensor',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 16,
-                        ),
-                      ),
-                      Text(
-                        'Tap to view accelerometer data',
-                        style: TextStyle(color: Colors.white70, fontSize: 12),
-                      ),
-                    ],
-                  ),
-                  Spacer(),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    color: Colors.white70,
-                    size: 16,
-                  ),
-                ],
-              ),
+              ],
             ),
           ),
 
@@ -419,6 +496,102 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
           ),
 
           const SizedBox(height: 40),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Activity Suggestion Bottom Sheet ────────────────────────────────────────
+class _ActivitySuggestionSheet extends StatelessWidget {
+  final Map<String, String> activity;
+  final VoidCallback onStart;
+  const _ActivitySuggestionSheet({
+    required this.activity,
+    required this.onStart,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          const Text(
+            '🎲 Activity Suggestion',
+            style: TextStyle(fontSize: 13, color: Colors.black45),
+          ),
+          const SizedBox(height: 8),
+
+          Text(
+            activity['emoji']!,
+            style: const TextStyle(fontSize: 56),
+          ),
+          const SizedBox(height: 10),
+
+          Text(
+            activity['title']!,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '${activity['category']} · ${activity['duration']}',
+            style: const TextStyle(color: Colors.black45, fontSize: 13),
+          ),
+
+          const SizedBox(height: 24),
+
+          SizedBox(
+            width: double.infinity,
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF8EC5FC), Color(0xFFE0C3FC)],
+                ),
+              ),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                onPressed: onStart,
+                child: const Text(
+                  'Start Activity →',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Maybe later'),
+          ),
         ],
       ),
     );

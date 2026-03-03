@@ -37,6 +37,7 @@ dependencies:
   cupertino_icons: ^1.0.8
 
   sensors_plus: ^6.1.1
+  proximity_sensor: ^1.0.4
 
 
  # State Management

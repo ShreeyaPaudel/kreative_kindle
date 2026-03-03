@@ -123,7 +123,10 @@ class _PostCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final caption = post['caption']?.toString() ?? '';
-    final imageUrl = post['image']?.toString() ?? '';
+    final rawImage = post['image']?.toString() ?? '';
+    final imageUrl = rawImage.isNotEmpty && !rawImage.startsWith('http')
+        ? 'http://192.168.1.69:3001/uploads/$rawImage'
+        : rawImage;
     final userObj = post['userId'];
     final userName = userObj is Map
         ? (userObj['fullName'] ?? userObj['name'] ?? 'Parent')
@@ -165,7 +168,18 @@ class _PostCard extends StatelessWidget {
                 height: 160,
                 width: double.infinity,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                errorBuilder: (_, __, ___) => const SizedBox(
+                  height: 160,
+                  child: Center(
+                    child: Icon(Icons.broken_image, size: 48, color: Colors.grey),
+                  ),
+                ),
+                loadingBuilder: (context, child, progress) => progress == null
+                    ? child
+                    : const SizedBox(
+                        height: 160,
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
               ),
             ),
           ],
