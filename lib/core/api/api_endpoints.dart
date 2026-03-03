@@ -1,8 +1,8 @@
 class ApiEndpoints {
   ApiEndpoints._();
 
-  // Android emulator localhost
-  static const String baseUrl = 'http://10.0.2.2:3001/api';
+  // Physical device — WiFi IP
+  static const String baseUrl = 'http://192.168.1.69:3001/api';
 
   static const Duration connectionTimeout = Duration(seconds: 30);
   static const Duration receiveTimeout = Duration(seconds: 30);

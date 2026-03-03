@@ -1,16 +1,17 @@
-# kreative_kindle
+# Kreative Kindle
 
-A new Flutter project.
+A Flutter mobile application for early childhood learning, designed for parents and instructors. The app offers structured activities across craft, literacy, numeracy, science, and storytelling domains.
 
-## Getting Started
+## Features
+- Role-based auth (parent / instructor) with JWT
+- Activity library with step-by-step instructions
+- Sensor integrations: shake for activity suggestions, gyroscope for hands-free step navigation, proximity sensor for auto-pause, and ambient light–driven dark mode
+- Post updates with image upload
+- Learning progress tracking and settings
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Setup
+```bash
+flutter pub get
+flutter run
+```
+Backend: Express + MongoDB — set `baseUrl` in `lib/core/api/api_endpoints.dart`.

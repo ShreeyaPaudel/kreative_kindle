@@ -21,4 +21,12 @@ class ThemeNotifier extends StateNotifier<bool> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isDarkMode', state);
   }
+
+  /// Called by the platform-brightness observer to sync theme automatically.
+  Future<void> setTheme(bool isDark) async {
+    if (state == isDark) return;
+    state = isDark;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isDarkMode', state);
+  }
 }
