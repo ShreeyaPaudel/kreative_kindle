@@ -30,6 +30,7 @@ class _ActivityDetailPageState extends State<ActivityDetailPage> {
   // ── Pause state (proximity) ────────────────────────────────────────────────
   bool _isPaused = false;
   StreamSubscription<dynamic>? _proxSub;
+  Timer? _proxDebounceTimer;
 
   // Unique content per activity
   Map<String, dynamic> get _activityData {
@@ -199,11 +200,20 @@ class _ActivityDetailPageState extends State<ActivityDetailPage> {
 
   // ── Proximity: face-down to pause activity ───────────────────────────────
   void _startProximity() {
-    _proxSub = ProximitySensor.events.listen((event) {
-      final isNear = (event == 0);
-      if (isNear != _isPaused && mounted) {
-        setState(() => _isPaused = isNear);
-      }
+    // Delay 800 ms so the page-open animation and any hand contact
+    // during navigation do not trigger a false positive immediately.
+    Future.delayed(const Duration(milliseconds: 800), () {
+      if (!mounted) return;
+      _proxSub = ProximitySensor.events.listen((event) {
+        final isNear = (event != 0); // Samsung: 0 = far, positive = near
+        // Debounce 400 ms: brief touches near the sensor won't pause the activity.
+        _proxDebounceTimer?.cancel();
+        _proxDebounceTimer = Timer(const Duration(milliseconds: 400), () {
+          if (isNear != _isPaused && mounted) {
+            setState(() => _isPaused = isNear);
+          }
+        });
+      });
     });
   }
 
@@ -211,6 +221,7 @@ class _ActivityDetailPageState extends State<ActivityDetailPage> {
   void dispose() {
     _gyroSub?.cancel();
     _proxSub?.cancel();
+    _proxDebounceTimer?.cancel();
     super.dispose();
   }
 
@@ -492,7 +503,12 @@ class _ActivityDetailPageState extends State<ActivityDetailPage> {
       child: Row(
         children: [
           const SizedBox(width: 4),
-          Text(text, style: const TextStyle(fontSize: 14, height: 1.5)),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(fontSize: 14, height: 1.5),
+            ),
+          ),
         ],
       ),
     );

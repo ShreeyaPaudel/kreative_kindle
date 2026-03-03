@@ -354,9 +354,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
               crossAxisCount: 2,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              crossAxisSpacing: 20,
-              mainAxisSpacing: 20,
-              childAspectRatio: 1.1,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: 0.9,
               children: [
                 FeatureTile(
                   title: "Craft Corner",
