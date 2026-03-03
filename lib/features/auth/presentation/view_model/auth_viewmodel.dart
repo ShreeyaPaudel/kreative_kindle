@@ -1,5 +1,5 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:riverpod/legacy.dart';
 
 import '../../data/models/auth_api_model.dart';
@@ -83,6 +83,62 @@ class AuthViewModel extends StateNotifier<AuthState> {
       // Save token to secure storage
       await _storage.write(key: _tokenKey, value: token);
 
+      state = state.copyWith(isLoading: false, error: null, token: token);
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> forgotPassword(String email) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      await _repo.forgotPassword(email);
+      state = state.copyWith(isLoading: false);
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> resetPassword({
+    required String token,
+    required String newPassword,
+  }) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      await _repo.resetPassword(token: token, newPassword: newPassword);
+      state = state.copyWith(isLoading: false);
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> loginWithGoogle() async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) {
+        // User cancelled the sign-in
+        state = state.copyWith(isLoading: false);
+        return false;
+      }
+
+      final googleAuth = await googleUser.authentication;
+      final idToken = googleAuth.idToken;
+      if (idToken == null) throw Exception("Google idToken not available");
+
+      final res = await _repo.loginWithGoogle(idToken);
+      final token = res['token']?.toString();
+      if (token == null || token.isEmpty) {
+        throw Exception("Token not received from backend");
+      }
+
+      await _storage.write(key: _tokenKey, value: token);
       state = state.copyWith(isLoading: false, error: null, token: token);
       return true;
     } catch (e) {
