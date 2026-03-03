@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../dashboard/presentation/pages/dashboard_page.dart';
 import '../view_model/auth_viewmodel.dart';
 import 'login_screen.dart';
 
@@ -22,6 +23,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   bool obscurePassword = true;
   bool obscureConfirmPassword = true;
+  bool _googleLoading = false;
 
   @override
   void dispose() {
@@ -191,9 +193,12 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                           onPressed: authState.isLoading
                               ? null
                               : () async {
-                                  if (!_formKey.currentState!.validate())
+                                  if (!_formKey.currentState!.validate()) {
                                     return;
-
+                                  }
+                                  final nav = Navigator.of(context);
+                                  final messenger =
+                                      ScaffoldMessenger.of(context);
                                   final ok = await ref
                                       .read(authViewModelProvider.notifier)
                                       .signup(
@@ -208,8 +213,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                                   if (!mounted) return;
 
                                   if (ok) {
-                                    Navigator.pushReplacement(
-                                      context,
+                                    nav.pushReplacement(
                                       MaterialPageRoute(
                                         builder: (_) => const LoginScreen(),
                                       ),
@@ -218,9 +222,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                                     final err = ref
                                         .read(authViewModelProvider)
                                         .error;
-                                    ScaffoldMessenger.of(context).showSnackBar(
+                                    messenger.showSnackBar(
                                       SnackBar(
-                                        content: Text(err ?? "Signup failed"),
+                                        content: Text(err ?? 'Signup failed'),
                                       ),
                                     );
                                   }
@@ -247,6 +251,95 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
                     const SizedBox(height: 20),
 
+                    // DIVIDER
+                    Row(
+                      children: [
+                        const Expanded(child: Divider()),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(
+                            'OR',
+                            style: const TextStyle(
+                              color: Colors.black45,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                        const Expanded(child: Divider()),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // GOOGLE BUTTON
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          side: const BorderSide(color: Colors.black26),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          backgroundColor: Colors.white,
+                        ),
+                        onPressed: _googleLoading
+                            ? null
+                            : () async {
+                                setState(() => _googleLoading = true);
+                                final nav = Navigator.of(context);
+                                final messenger =
+                                    ScaffoldMessenger.of(context);
+                                final success = await ref
+                                    .read(authViewModelProvider.notifier)
+                                    .loginWithGoogle();
+                                if (!mounted) return;
+                                setState(() => _googleLoading = false);
+                                if (success) {
+                                  nav.pushReplacement(
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          const DashboardPage(role: 'parent'),
+                                    ),
+                                  );
+                                } else {
+                                  final err =
+                                      ref.read(authViewModelProvider).error;
+                                  if (err != null) {
+                                    messenger.showSnackBar(
+                                      SnackBar(content: Text(err)),
+                                    );
+                                  }
+                                }
+                              },
+                        icon: _googleLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(
+                                Icons.g_mobiledata,
+                                size: 26,
+                                color: Color(0xFF4285F4),
+                              ),
+                        label: Text(
+                          _googleLoading
+                              ? 'Signing in...'
+                              : 'Continue with Google',
+                          style: const TextStyle(
+                            color: Colors.black87,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
                     Center(
                       child: GestureDetector(
                         onTap: () {
@@ -258,7 +351,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                           );
                         },
                         child: const Text(
-                          "Already have an account? Login",
+                          'Already have an account? Login',
                           style: TextStyle(color: Colors.black87),
                         ),
                       ),

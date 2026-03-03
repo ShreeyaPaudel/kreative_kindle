@@ -29,6 +29,34 @@ class AuthRemoteDatasource {
     );
   }
 
+  // ✅ FORGOT PASSWORD
+  Future<void> forgotPassword(String email) async {
+    await _dio.post(ApiEndpoints.forgotPassword, data: {'email': email});
+  }
+
+  // ✅ RESET PASSWORD
+  Future<void> resetPassword({
+    required String token,
+    required String newPassword,
+  }) async {
+    await _dio.post(
+      ApiEndpoints.resetPassword,
+      data: {'token': token, 'newPassword': newPassword},
+    );
+  }
+
+  // ✅ GOOGLE SIGN-IN — sends Google idToken to backend, gets JWT back
+  Future<Map<String, dynamic>> loginWithGoogle(String idToken) async {
+    final response = await _dio.post(
+      ApiEndpoints.googleAuth,
+      data: {'idToken': idToken},
+    );
+    final data = response.data;
+    final token = (data is Map) ? data['token']?.toString() : null;
+    final role  = (data is Map) ? data['role']?.toString() : null;
+    return <String, dynamic>{'token': token, 'role': role};
+  }
+
   // ✅ LOGIN -> returns Map {role, token, email}
   Future<Map<String, dynamic>> login({
     required String email,

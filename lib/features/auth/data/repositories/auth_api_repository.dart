@@ -51,4 +51,58 @@ class AuthApiRepository {
       throw Exception(e.toString());
     }
   }
+
+  Future<void> forgotPassword(String email) async {
+    final isConnected = await networkInfo.isConnected;
+    if (!isConnected) throw Exception("No internet connection");
+
+    try {
+      await remote.forgotPassword(email);
+    } on DioException catch (e) {
+      final msg =
+          (e.response?.data is Map && e.response?.data["message"] != null)
+          ? e.response?.data["message"].toString()
+          : "Failed to send reset email";
+      throw Exception(msg);
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  Future<void> resetPassword({
+    required String token,
+    required String newPassword,
+  }) async {
+    final isConnected = await networkInfo.isConnected;
+    if (!isConnected) throw Exception("No internet connection");
+
+    try {
+      await remote.resetPassword(token: token, newPassword: newPassword);
+    } on DioException catch (e) {
+      final msg =
+          (e.response?.data is Map && e.response?.data["message"] != null)
+          ? e.response?.data["message"].toString()
+          : "Password reset failed";
+      throw Exception(msg);
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  Future<Map<String, dynamic>> loginWithGoogle(String idToken) async {
+    final isConnected = await networkInfo.isConnected;
+    if (!isConnected) throw Exception("No internet connection");
+
+    try {
+      return await remote.loginWithGoogle(idToken);
+    } on DioException catch (e) {
+      final msg =
+          (e.response?.data is Map && e.response?.data["message"] != null)
+          ? e.response?.data["message"].toString()
+          : "Google sign-in failed";
+      throw Exception(msg);
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
 }

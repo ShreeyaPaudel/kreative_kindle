@@ -9,5 +9,12 @@ class ApiEndpoints {
 
   // SIMPLE endpoints (role is sent in body)
   static const String register = '/auth/register';
-  static const String login = '/auth/login';
+  static const String login    = '/auth/login';
+
+  // Password reset
+  static const String forgotPassword = '/auth/forgot-password';
+  static const String resetPassword  = '/auth/reset-password';
+
+  // Google OAuth
+  static const String googleAuth = '/auth/google';
 }
