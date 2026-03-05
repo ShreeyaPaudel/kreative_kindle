@@ -1,6 +1,7 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:riverpod/legacy.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/models/auth_api_model.dart';
 import '../../data/repositories/auth_api_repository.dart';
@@ -80,8 +81,16 @@ class AuthViewModel extends StateNotifier<AuthState> {
         throw Exception("Token not found from backend");
       }
 
-      // Save token to secure storage
       await _storage.write(key: _tokenKey, value: token);
+
+      // Persist user info for Profile page
+      final prefs = await SharedPreferences.getInstance();
+      if (res['userId'] != null) {
+        await prefs.setString('user_id', res['userId'].toString());
+      }
+      if (res['email'] != null) {
+        await prefs.setString('user_email', res['email'].toString());
+      }
 
       state = state.copyWith(isLoading: false, error: null, token: token);
       return true;
@@ -121,7 +130,9 @@ class AuthViewModel extends StateNotifier<AuthState> {
   Future<bool> loginWithGoogle() async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final googleUser = await GoogleSignIn().signIn();
+      final googleUser = await GoogleSignIn(
+        serverClientId: '911031020815-cqe289klh2micbi09jrtae5tn049b8h8.apps.googleusercontent.com',
+      ).signIn();
       if (googleUser == null) {
         // User cancelled the sign-in
         state = state.copyWith(isLoading: false);
@@ -139,7 +150,41 @@ class AuthViewModel extends StateNotifier<AuthState> {
       }
 
       await _storage.write(key: _tokenKey, value: token);
+
+      // Persist user info for Profile page
+      if (res['userId'] != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('user_id', res['userId'].toString());
+      }
+
       state = state.copyWith(isLoading: false, error: null, token: token);
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> updateProfile({
+    required String userId,
+    String? username,
+    String? email,
+    String? password,
+  }) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      await _repo.updateProfile(
+        userId: userId,
+        username: username,
+        email: email,
+        password: password,
+      );
+      // Update cached email if changed
+      if (email != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('user_email', email);
+      }
+      state = state.copyWith(isLoading: false);
       return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());

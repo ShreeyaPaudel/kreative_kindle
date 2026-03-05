@@ -1,4 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:riverpod/legacy.dart';
 
@@ -13,7 +13,16 @@ class ThemeNotifier extends StateNotifier<bool> {
 
   Future<void> _loadTheme() async {
     final prefs = await SharedPreferences.getInstance();
-    state = prefs.getBool('isDarkMode') ?? false;
+    if (prefs.containsKey('isDarkMode')) {
+      // Respect user's saved preference
+      state = prefs.getBool('isDarkMode')!;
+    } else {
+      // First launch: sync with device system theme
+      final brightness =
+          WidgetsBinding.instance.platformDispatcher.platformBrightness;
+      state = brightness == Brightness.dark;
+      await prefs.setBool('isDarkMode', state);
+    }
   }
 
   Future<void> toggleTheme() async {

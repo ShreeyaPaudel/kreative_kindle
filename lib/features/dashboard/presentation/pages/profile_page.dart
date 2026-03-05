@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../features/auth/data/repositories/user_repository.dart';
+import '../../../../features/auth/presentation/view_model/auth_viewmodel.dart';
+import '../../../../features/children/presentation/pages/children_page.dart';
 import '../../../media/presentation/view_model/media_viewmodel.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
@@ -15,7 +17,9 @@ class ProfilePage extends ConsumerStatefulWidget {
 }
 
 class _ProfilePageState extends ConsumerState<ProfilePage> {
-  Map<String, dynamic>? _userData;
+  String? _userId;
+  String _name = 'Parent';
+  String _email = '';
   File? _selectedImage;
   String? _savedImageUrl;
   final ImagePicker _picker = ImagePicker();
@@ -28,8 +32,21 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   Future<void> _loadUser() async {
-    final data = await ref.read(userRepositoryProvider).getLoggedInUser();
-    setState(() => _userData = data);
+    final prefs = await SharedPreferences.getInstance();
+    final storedId    = prefs.getString('user_id');
+    final storedEmail = prefs.getString('user_email');
+    final storedName  = prefs.getString('user_name');
+
+    // Also decode JWT to get id if SharedPreferences is empty
+    final decoded = await ref.read(userRepositoryProvider).getLoggedInUser();
+    final jwtId = decoded?['id']?.toString();
+
+    if (!mounted) return;
+    setState(() {
+      _userId = storedId ?? jwtId;
+      _email  = storedEmail ?? '';
+      _name   = storedName ?? 'Parent';
+    });
   }
 
   Future<void> _loadSavedImage() async {
@@ -41,20 +58,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   Future<void> _pickAndUpload() async {
-    final x = await _picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 80,
-    );
+    final x = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
     if (x == null) return;
     setState(() => _selectedImage = File(x.path));
     await ref.read(mediaViewModelProvider.notifier).upload(File(x.path));
-    final state = ref.read(mediaViewModelProvider);
+    final mediaState = ref.read(mediaViewModelProvider);
 
-    if (state.imageUrl != null) {
-      // Ensure we store a full URL so it survives app restarts
-      final fullUrl = state.imageUrl!.startsWith('http')
-          ? state.imageUrl!
-          : 'http://192.168.1.69:3001/uploads/${state.imageUrl!}';
+    if (mediaState.imageUrl != null) {
+      final fullUrl = mediaState.imageUrl!.startsWith('http')
+          ? mediaState.imageUrl!
+          : 'http://192.168.1.115:3001/uploads/${mediaState.imageUrl!}';
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('profile_image_url', fullUrl);
       if (mounted) setState(() => _savedImageUrl = fullUrl);
@@ -62,27 +75,112 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          state.error != null ? state.error! : 'Profile photo updated! ✅',
+      SnackBar(content: Text(mediaState.error != null ? mediaState.error! : 'Profile photo updated! ✅')),
+    );
+  }
+
+  Future<void> _showEditProfileDialog() async {
+    final nameCtrl  = TextEditingController(text: _name == 'Parent' ? '' : _name);
+    final emailCtrl = TextEditingController(text: _email);
+    final passCtrl  = TextEditingController();
+
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Edit Profile'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameCtrl,
+                decoration: const InputDecoration(labelText: 'Name'),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: emailCtrl,
+                decoration: const InputDecoration(labelText: 'Email'),
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: passCtrl,
+                decoration: const InputDecoration(labelText: 'New Password (optional)'),
+                obscureText: true,
+              ),
+            ],
+          ),
         ),
+        actions: [
+          TextButton(
+            onPressed: () => navigator.pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              navigator.pop();
+              if (_userId == null) return;
+
+              final ok = await ref.read(authViewModelProvider.notifier).updateProfile(
+                userId: _userId!,
+                username: nameCtrl.text.trim().isNotEmpty ? nameCtrl.text.trim() : null,
+                // Only send email if it actually changed — avoids E11000 duplicate key
+                email: emailCtrl.text.trim().isNotEmpty && emailCtrl.text.trim() != _email
+                    ? emailCtrl.text.trim()
+                    : null,
+                password: passCtrl.text.isNotEmpty ? passCtrl.text : null,
+              );
+
+              if (ok) {
+                final prefs = await SharedPreferences.getInstance();
+                if (nameCtrl.text.trim().isNotEmpty) {
+                  await prefs.setString('user_name', nameCtrl.text.trim());
+                }
+                if (!mounted) return;
+                setState(() {
+                  if (nameCtrl.text.trim().isNotEmpty) _name = nameCtrl.text.trim();
+                  if (emailCtrl.text.trim().isNotEmpty) _email = emailCtrl.text.trim();
+                });
+                messenger.showSnackBar(const SnackBar(content: Text('Profile updated! ✅')));
+              } else {
+                final err = ref.read(authViewModelProvider).error ?? 'Update failed';
+                messenger.showSnackBar(SnackBar(content: Text(err)));
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? const Color(0xFF1E2530) : const Color(0xFFF5F7FF);
+    final subColor  = isDark ? Colors.white54 : Colors.black54;
     final mediaState = ref.watch(mediaViewModelProvider);
-    final name = _userData?['fullName'] ?? _userData?['name'] ?? 'Parent';
-    final email = _userData?['email'] ?? '';
 
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          const Text(
-            "Profile",
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "Profile",
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+              ),
+              TextButton.icon(
+                onPressed: _showEditProfileDialog,
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                label: const Text('Edit'),
+              ),
+            ],
           ),
           const SizedBox(height: 16),
 
@@ -107,18 +205,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         backgroundImage: _selectedImage != null
                             ? FileImage(_selectedImage!) as ImageProvider
                             : (_savedImageUrl ?? mediaState.imageUrl) != null
-                            ? NetworkImage(
-                                    (_savedImageUrl ?? mediaState.imageUrl)!)
-                                as ImageProvider
-                            : null,
+                                ? NetworkImage((_savedImageUrl ?? mediaState.imageUrl)!)
+                                    as ImageProvider
+                                : null,
                         child: (_selectedImage == null &&
                                 _savedImageUrl == null &&
                                 mediaState.imageUrl == null)
-                            ? const Icon(
-                                Icons.person,
-                                size: 38,
-                                color: Colors.black45,
-                              )
+                            ? const Icon(Icons.person, size: 38, color: Colors.black45)
                             : null,
                       ),
                       Positioned(
@@ -130,11 +223,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                             color: Colors.white,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(
-                            Icons.camera_alt,
-                            size: 14,
-                            color: Colors.black54,
-                          ),
+                          child: const Icon(Icons.camera_alt, size: 14, color: Colors.black54),
                         ),
                       ),
                     ],
@@ -146,7 +235,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        name,
+                        _name,
                         style: const TextStyle(
                           fontSize: 18,
                           color: Colors.white,
@@ -155,25 +244,19 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        email,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 13,
-                        ),
+                        _email,
+                        style: const TextStyle(color: Colors.white70, fontSize: 13),
                       ),
                       const SizedBox(height: 4),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.25),
+                          color: Colors.white.withValues(alpha: 0.25),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: const Text(
-                          'Parent',
-                          style: TextStyle(
+                        child: Text(
+                          widget.role.isNotEmpty ? widget.role : 'Parent',
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -189,14 +272,35 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
           const SizedBox(height: 16),
 
-          // Child info card
-          _infoCard(
-            title: "Child Info",
-            rows: const [
-              ("Child", "Demo Child"),
-              ("Age", "4 years"),
-              ("Level", "Beginner"),
-            ],
+          // Children card — tap to manage
+          GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ChildrenPage()),
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: cardColor,
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 8)],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Children', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+                        SizedBox(height: 4),
+                        Text('Manage your children\'s profiles', style: TextStyle(color: subColor, fontSize: 13)),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, color: subColor),
+                ],
+              ),
+            ),
           ),
 
           const SizedBox(height: 16),
@@ -204,7 +308,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           // Account info
           _infoCard(
             title: "Account Info",
-            rows: [("Name", name), ("Email", email), ("Role", "Parent")],
+            rows: [
+              ("Name", _name),
+              ("Email", _email.isNotEmpty ? _email : '—'),
+              ("Role", widget.role.isNotEmpty ? widget.role : 'Parent'),
+            ],
+            cardColor: cardColor,
+            subColor: subColor,
           ),
 
           const SizedBox(height: 16),
@@ -232,18 +342,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     ? const SizedBox(
                         width: 16,
                         height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                       )
                     : const Icon(Icons.camera_alt, color: Colors.white),
                 label: Text(
                   mediaState.loading ? 'Uploading...' : 'Update Profile Photo',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
                 ),
                 onPressed: mediaState.loading ? null : _pickAndUpload,
               ),
@@ -257,21 +361,20 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   Widget _infoCard({
     required String title,
     required List<(String, String)> rows,
+    required Color cardColor,
+    required Color subColor,
   }) {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F7FF),
+        color: cardColor,
         borderRadius: BorderRadius.circular(18),
         boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 8)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-          ),
+          Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
           const SizedBox(height: 10),
           ...rows.map(
             (r) => Padding(
@@ -279,11 +382,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(r.$1, style: const TextStyle(color: Colors.black54)),
-                  Text(
-                    r.$2,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
+                  Text(r.$1, style: TextStyle(color: subColor)),
+                  Text(r.$2, style: const TextStyle(fontWeight: FontWeight.w700)),
                 ],
               ),
             ),

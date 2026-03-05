@@ -18,13 +18,6 @@ class _KreativeKindleAppState extends ConsumerState<KreativeKindleApp>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-
-    // Sync theme with whatever the system brightness is right now
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final brightness =
-          WidgetsBinding.instance.platformDispatcher.platformBrightness;
-      ref.read(themeProvider.notifier).setTheme(brightness == Brightness.dark);
-    });
   }
 
   @override

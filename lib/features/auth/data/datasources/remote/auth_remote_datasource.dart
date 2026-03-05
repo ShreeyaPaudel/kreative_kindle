@@ -15,83 +15,93 @@ class AuthRemoteDatasource {
 
   AuthRemoteDatasource(this._dio);
 
-  // ✅ REGISTER
+  // REGISTER — backend expects { username, email, password }
   Future<void> register(AuthApiModel model) async {
     await _dio.post(
       ApiEndpoints.register,
       data: {
-        "fullName": model.fullName,
-        "email": model.email,
-        "address": model.address,
-        "password": model.password,
-        "role": model.role,
+        'username': model.fullName ?? '',
+        'email': model.email,
+        'password': model.password,
       },
     );
   }
 
-  // ✅ FORGOT PASSWORD
-  Future<void> forgotPassword(String email) async {
-    await _dio.post(ApiEndpoints.forgotPassword, data: {'email': email});
-  }
-
-  // ✅ RESET PASSWORD
-  Future<void> resetPassword({
-    required String token,
-    required String newPassword,
-  }) async {
-    await _dio.post(
-      ApiEndpoints.resetPassword,
-      data: {'token': token, 'newPassword': newPassword},
-    );
-  }
-
-  // ✅ GOOGLE SIGN-IN — sends Google idToken to backend, gets JWT back
-  Future<Map<String, dynamic>> loginWithGoogle(String idToken) async {
-    final response = await _dio.post(
-      ApiEndpoints.googleAuth,
-      data: {'idToken': idToken},
-    );
-    final data = response.data;
-    final token = (data is Map) ? data['token']?.toString() : null;
-    final role  = (data is Map) ? data['role']?.toString() : null;
-    return <String, dynamic>{'token': token, 'role': role};
-  }
-
-  // ✅ LOGIN -> returns Map {role, token, email}
+  // LOGIN
   Future<Map<String, dynamic>> login({
     required String email,
     required String password,
   }) async {
     final response = await _dio.post(
       ApiEndpoints.login,
-      data: {"email": email, "password": password},
+      data: {'email': email, 'password': password},
     );
 
     final data = response.data;
-
-    // DEBUG (keep for now)
-    // ignore: avoid_print
-    print("LOGIN RESPONSE => $data");
-
-    // Supports:
-    // 1) { user: {...}, token: "..." }
-    // 2) { data: { user: {...} }, token: "..." }
-    // 3) { data: {...}, user: {...} } (extra safe)
-
     Map user = {};
-
-    if (data is Map) {
-      if (data["user"] is Map) {
-        user = data["user"] as Map;
-      } else if (data["data"] is Map && (data["data"] as Map)["user"] is Map) {
-        user = (data["data"] as Map)["user"] as Map;
-      }
+    if (data is Map && data['user'] is Map) {
+      user = data['user'] as Map;
     }
 
-    final token = (data is Map) ? data["token"]?.toString() : null;
-    final role = user["role"]?.toString();
-    final userEmail = user["email"]?.toString();
+    final token     = (data is Map) ? data['token']?.toString() : null;
+    final role      = user['role']?.toString();
+    final userEmail = user['email']?.toString();
+    final userId    = (user['id'] ?? user['_id'])?.toString();
 
-    return <String, dynamic>{"email": userEmail, "role": role, "token": token};
+    return <String, dynamic>{
+      'email': userEmail,
+      'role': role,
+      'token': token,
+      'userId': userId,
+    };
+  }
+
+  // FORGOT PASSWORD
+  Future<void> forgotPassword(String email) async {
+    await _dio.post(ApiEndpoints.forgotPassword, data: {'email': email});
+  }
+
+  // RESET PASSWORD — backend expects { token, password }
+  Future<void> resetPassword({
+    required String token,
+    required String newPassword,
+  }) async {
+    await _dio.post(
+      ApiEndpoints.resetPassword,
+      data: {'token': token, 'password': newPassword},
+    );
+  }
+
+  // GOOGLE SIGN-IN (mobile) — sends idToken to POST /api/auth/google/token
+  Future<Map<String, dynamic>> loginWithGoogle(String idToken) async {
+    final response = await _dio.post(
+      ApiEndpoints.googleMobileAuth,
+      data: {'idToken': idToken},
+    );
+    final data   = response.data;
+    final token  = (data is Map) ? data['token']?.toString() : null;
+    final u      = (data is Map && data['user'] is Map) ? data['user'] as Map : <dynamic, dynamic>{};
+    final role   = u['role']?.toString();
+    final userId = (u['id'] ?? u['_id'])?.toString();
+    return <String, dynamic>{'token': token, 'role': role, 'userId': userId};
+  }
+
+  // UPDATE PROFILE — PUT /api/auth/:id
+  Future<Map<String, dynamic>> updateProfile({
+    required String userId,
+    String? username,
+    String? email,
+    String? password,
+  }) async {
+    final response = await _dio.put(
+      '${ApiEndpoints.updateProfile}/$userId',
+      data: {
+        if (username != null) 'username': username,
+        if (email != null) 'email': email,
+        if (password != null) 'password': password,
+      },
+    );
+    final data = response.data;
+    return (data is Map) ? Map<String, dynamic>.from(data) : {};
   }
 }

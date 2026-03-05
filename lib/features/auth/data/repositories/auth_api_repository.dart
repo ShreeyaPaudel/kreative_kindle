@@ -105,4 +105,31 @@ class AuthApiRepository {
       throw Exception(e.toString());
     }
   }
+
+  Future<Map<String, dynamic>> updateProfile({
+    required String userId,
+    String? username,
+    String? email,
+    String? password,
+  }) async {
+    final isConnected = await networkInfo.isConnected;
+    if (!isConnected) throw Exception("No internet connection");
+
+    try {
+      return await remote.updateProfile(
+        userId: userId,
+        username: username,
+        email: email,
+        password: password,
+      );
+    } on DioException catch (e) {
+      final msg =
+          (e.response?.data is Map && e.response?.data["message"] != null)
+          ? e.response?.data["message"].toString()
+          : "Profile update failed";
+      throw Exception(msg);
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
 }

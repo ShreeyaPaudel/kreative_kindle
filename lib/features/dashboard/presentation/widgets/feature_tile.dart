@@ -14,12 +14,13 @@ class FeatureTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: const Color(0xFFF5F7FF),
+          color: isDark ? const Color(0xFF1E2530) : const Color(0xFFF5F7FF),
           borderRadius: BorderRadius.circular(18),
           boxShadow: const [
             BoxShadow(
@@ -48,7 +49,11 @@ class FeatureTile extends StatelessWidget {
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
             ),
           ],
         ),
