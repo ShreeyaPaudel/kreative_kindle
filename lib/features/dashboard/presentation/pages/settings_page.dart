@@ -42,6 +42,17 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   Future<void> _toggleNotifications(bool val) async {
+    if (val) {
+      // Request runtime permission first (required on Android 13+)
+      final granted = await NotificationService.requestPermission();
+      if (!mounted) return;
+      if (!granted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Notification permission denied')),
+        );
+        return;
+      }
+    }
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('notifications_enabled', val);
     if (!mounted) return;
