@@ -5,9 +5,60 @@ class ActivitiesPage extends StatelessWidget {
   final String category;
   const ActivitiesPage({super.key, required this.category});
 
+  static const _categoryActivities = {
+    'Craft Corner': [
+      {'title': 'Rainbow Paper Craft', 'duration': '10 mins', 'emoji': '🌈'},
+      {'title': 'Paper Plate Animals', 'duration': '15 mins', 'emoji': '🦁'},
+      {'title': 'Collage Making', 'duration': '20 mins', 'emoji': '✂️'},
+      {'title': 'Clay Modelling', 'duration': '25 mins', 'emoji': '🏺'},
+      {'title': 'Origami Shapes', 'duration': '12 mins', 'emoji': '📄'},
+      {'title': 'Puppet Making', 'duration': '18 mins', 'emoji': '🎭'},
+    ],
+    'Letters & Phonics': [
+      {'title': 'Letter Tracing', 'duration': '10 mins', 'emoji': '✍️'},
+      {'title': 'Rhyme Time', 'duration': '8 mins', 'emoji': '🎵'},
+      {'title': 'Alphabet Puzzle', 'duration': '15 mins', 'emoji': '🔤'},
+      {'title': 'Word Building', 'duration': '12 mins', 'emoji': '📝'},
+      {'title': 'Sound Sorting', 'duration': '10 mins', 'emoji': '👂'},
+      {'title': 'Silly Sentences', 'duration': '8 mins', 'emoji': '😄'},
+    ],
+    'Story Time': [
+      {'title': 'Story Building', 'duration': '12 mins', 'emoji': '📖'},
+      {'title': 'Character Drawing', 'duration': '15 mins', 'emoji': '✏️'},
+      {'title': 'Story Sequencing', 'duration': '10 mins', 'emoji': '🃏'},
+      {'title': 'Puppet Theatre', 'duration': '20 mins', 'emoji': '🎭'},
+      {'title': 'Book Review', 'duration': '8 mins', 'emoji': '⭐'},
+      {'title': 'Make a Comic', 'duration': '18 mins', 'emoji': '💬'},
+    ],
+    'Numbers & Logic': [
+      {'title': 'Number Puzzles', 'duration': '10 mins', 'emoji': '🔢'},
+      {'title': 'Counting Bears', 'duration': '8 mins', 'emoji': '🐻'},
+      {'title': 'Shape Patterns', 'duration': '12 mins', 'emoji': '🔷'},
+      {'title': 'Simple Addition', 'duration': '15 mins', 'emoji': '➕'},
+      {'title': 'Memory Match', 'duration': '10 mins', 'emoji': '🧠'},
+      {'title': 'Time Telling', 'duration': '12 mins', 'emoji': '🕐'},
+    ],
+    'Thinking Skills': [
+      {'title': 'Shape Sorting Game', 'duration': '15 mins', 'emoji': '🔷'},
+      {'title': 'Maze Runner', 'duration': '10 mins', 'emoji': '🌀'},
+      {'title': 'Pattern Copying', 'duration': '8 mins', 'emoji': '🎨'},
+      {'title': 'Block Building', 'duration': '20 mins', 'emoji': '🧱'},
+      {'title': 'What Comes Next?', 'duration': '10 mins', 'emoji': '❓'},
+      {'title': 'Spot the Difference', 'duration': '12 mins', 'emoji': '🔍'},
+    ],
+    'Science & Nature': [
+      {'title': 'Nature Walk', 'duration': '25 mins', 'emoji': '🌿'},
+      {'title': 'Leaf Printing', 'duration': '15 mins', 'emoji': '🍂'},
+      {'title': 'Sink or Float', 'duration': '10 mins', 'emoji': '🌊'},
+      {'title': 'Bug Hunting', 'duration': '20 mins', 'emoji': '🐛'},
+      {'title': 'Mini Garden', 'duration': '30 mins', 'emoji': '🌱'},
+      {'title': 'Cloud Watching', 'duration': '15 mins', 'emoji': '☁️'},
+    ],
+  };
+
   @override
   Widget build(BuildContext context) {
-    final activities = [
+    final activities = _categoryActivities[category] ?? [
       {'title': 'Rainbow Paper Craft', 'duration': '10 mins', 'emoji': '🌈'},
       {'title': 'Shape Sorting Game', 'duration': '15 mins', 'emoji': '🔷'},
       {'title': 'Finger Painting', 'duration': '20 mins', 'emoji': '🎨'},
@@ -17,7 +68,6 @@ class ActivitiesPage extends StatelessWidget {
     ];
 
     return Scaffold(
-      backgroundColor: Colors.white,
       body: Column(
         children: [
           Container(
@@ -41,7 +91,7 @@ class ActivitiesPage extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.25),
+                      color: Colors.white.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(Icons.arrow_back, color: Colors.white),
@@ -76,6 +126,7 @@ class ActivitiesPage extends StatelessWidget {
               itemCount: activities.length,
               itemBuilder: (context, index) {
                 final activity = activities[index];
+                final isDark = Theme.of(context).brightness == Brightness.dark;
                 return GestureDetector(
                   onTap: () => Navigator.push(
                     context,
@@ -92,7 +143,7 @@ class ActivitiesPage extends StatelessWidget {
                     margin: const EdgeInsets.only(bottom: 14),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF5F7FF),
+                      color: isDark ? const Color(0xFF1E2530) : const Color(0xFFF5F7FF),
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: const [
                         BoxShadow(color: Colors.black12, blurRadius: 6),
@@ -119,16 +170,16 @@ class ActivitiesPage extends StatelessWidget {
                               const SizedBox(height: 4),
                               Row(
                                 children: [
-                                  const Icon(
+                                  Icon(
                                     Icons.timer,
                                     size: 14,
-                                    color: Colors.black45,
+                                    color: isDark ? Colors.white54 : Colors.black45,
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
                                     activity['duration']!,
-                                    style: const TextStyle(
-                                      color: Colors.black45,
+                                    style: TextStyle(
+                                      color: isDark ? Colors.white54 : Colors.black45,
                                       fontSize: 12,
                                     ),
                                   ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/api/api_client.dart';
+import '../../../../features/auth/data/repositories/user_repository.dart';
 import '../../../../features/media/presentation/view_model/media_viewmodel.dart';
 
 final postsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
@@ -79,7 +80,7 @@ class UpdatesPage extends ConsumerWidget {
                   child: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.25),
+                      color: Colors.white.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(Icons.add, color: Colors.white),
@@ -117,21 +118,119 @@ class UpdatesPage extends ConsumerWidget {
   }
 }
 
-class _PostCard extends StatelessWidget {
+// ─── POST CARD ────────────────────────────────────────────────────────────────
+class _PostCard extends ConsumerStatefulWidget {
   final Map<String, dynamic> post;
   const _PostCard({required this.post});
 
   @override
+  ConsumerState<_PostCard> createState() => _PostCardState();
+}
+
+class _PostCardState extends ConsumerState<_PostCard> {
+  String? _currentUserId;
+  late bool _liked;
+  late int _likeCount;
+
+  @override
+  void initState() {
+    super.initState();
+    final likes = widget.post['likes'];
+    _likeCount = likes is List ? likes.length : 0;
+    _liked = false;
+    _loadCurrentUser();
+  }
+
+  Future<void> _loadCurrentUser() async {
+    final decoded = await ref.read(userRepositoryProvider).getLoggedInUser();
+    final uid = decoded?['id']?.toString();
+    if (!mounted) return;
+    setState(() {
+      _currentUserId = uid;
+      final likes = widget.post['likes'];
+      if (likes is List && uid != null) {
+        _liked = likes.any((l) => l.toString() == uid);
+      }
+    });
+  }
+
+  Future<void> _toggleLike() async {
+    final postId = widget.post['_id']?.toString() ?? '';
+    if (postId.isEmpty) return;
+    setState(() {
+      _liked = !_liked;
+      _likeCount += _liked ? 1 : -1;
+    });
+    try {
+      final client = ref.read(apiClientProvider);
+      await client.post('/posts/$postId/like');
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _liked = !_liked;
+        _likeCount += _liked ? 1 : -1;
+      });
+    }
+  }
+
+  Future<void> _deletePost() async {
+    final postId = widget.post['_id']?.toString() ?? '';
+    if (postId.isEmpty) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Post'),
+        content: const Text('Are you sure you want to delete this post?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete',
+                style: TextStyle(color: Colors.redAccent)),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+
+    try {
+      final client = ref.read(apiClientProvider);
+      await client.delete('/posts/$postId');
+      ref.invalidate(postsProvider);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete: $e')),
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final post = widget.post;
     final caption = post['caption']?.toString() ?? '';
     final rawImage = post['image']?.toString() ?? '';
     final imageUrl = rawImage.isNotEmpty && !rawImage.startsWith('http')
-        ? 'http://192.168.1.69:3001/uploads/$rawImage'
+        ? 'http://192.168.1.115:3001/uploads/$rawImage'
         : rawImage;
     final userObj = post['userId'];
-    final userName = userObj is Map
-        ? (userObj['fullName'] ?? userObj['name'] ?? 'Parent')
-        : 'Parent';
+    // username may be stored directly on the post or inside a populated userId object
+    final userName = post['username']?.toString() ??
+        (userObj is Map
+            ? (userObj['username'] ?? userObj['name'] ?? userObj['fullName'] ?? 'Parent').toString()
+            : 'Parent');
+    // userId may be a plain string (not populated) or a populated Map
+    final postOwnerId = userObj is Map
+        ? (userObj['_id'] ?? userObj['id'])?.toString()
+        : userObj?.toString();
+    final isOwnPost =
+        _currentUserId != null && postOwnerId == _currentUserId;
+
     final materials = post['materials']?.toString() ?? '';
     final outcomes = post['learningOutcomes']?.toString() ?? '';
     final steps = post['steps']?.toString() ?? '';
@@ -140,7 +239,7 @@ class _PostCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F7FF),
+        color: isDark ? const Color(0xFF1E2530) : const Color(0xFFF5F7FF),
         borderRadius: BorderRadius.circular(16),
         boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)],
       ),
@@ -156,11 +255,20 @@ class _PostCard extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  userName.toString(),
+                  userName,
                   style: const TextStyle(fontWeight: FontWeight.w700),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+              if (isOwnPost)
+                GestureDetector(
+                  onTap: _deletePost,
+                  child: const Padding(
+                    padding: EdgeInsets.only(left: 8),
+                    child: Icon(Icons.delete_outline,
+                        color: Colors.redAccent, size: 20),
+                  ),
+                ),
             ],
           ),
           if (imageUrl.isNotEmpty) ...[
@@ -175,7 +283,8 @@ class _PostCard extends StatelessWidget {
                 errorBuilder: (_, __, ___) => const SizedBox(
                   height: 160,
                   child: Center(
-                    child: Icon(Icons.broken_image, size: 48, color: Colors.grey),
+                    child:
+                        Icon(Icons.broken_image, size: 48, color: Colors.grey),
                   ),
                 ),
                 loadingBuilder: (context, child, progress) => progress == null
@@ -193,22 +302,40 @@ class _PostCard extends StatelessWidget {
           ],
           if (materials.isNotEmpty) ...[
             const SizedBox(height: 8),
-            _infoChip('📦 Materials', materials),
+            _infoChip('📦 Materials', materials, isDark),
           ],
           if (outcomes.isNotEmpty) ...[
             const SizedBox(height: 6),
-            _infoChip('🎯 Learning Outcomes', outcomes),
+            _infoChip('🎯 Learning Outcomes', outcomes, isDark),
           ],
           if (steps.isNotEmpty) ...[
             const SizedBox(height: 6),
-            _infoChip('📋 Steps', steps),
+            _infoChip('📋 Steps', steps, isDark),
           ],
+          const SizedBox(height: 10),
+          GestureDetector(
+            onTap: _toggleLike,
+            child: Row(
+              children: [
+                Icon(
+                  _liked ? Icons.favorite : Icons.favorite_border,
+                  color: _liked ? Colors.pinkAccent : Colors.black38,
+                  size: 20,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '$_likeCount',
+                  style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 13),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _infoChip(String label, String value) {
+  Widget _infoChip(String label, String value, bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -223,14 +350,13 @@ class _PostCard extends StatelessWidget {
         const SizedBox(height: 2),
         Text(
           value,
-          style: const TextStyle(fontSize: 13, color: Colors.black54),
+          style: TextStyle(fontSize: 13, color: isDark ? Colors.white54 : Colors.black54),
         ),
       ],
     );
   }
 }
 
-// ─── POST UPDATE PAGE ─────────────────────────────────────────────────────────
 // ─── POST UPDATE PAGE ─────────────────────────────────────────────────────────
 class PostUpdatePage extends ConsumerStatefulWidget {
   const PostUpdatePage({super.key});
@@ -262,9 +388,8 @@ class _PostUpdatePageState extends ConsumerState<PostUpdatePage> {
 
   Future<void> _submitPost() async {
     if (_captionController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please write a caption!')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please write a caption!')));
       return;
     }
 
@@ -289,15 +414,13 @@ class _PostUpdatePageState extends ConsumerState<PostUpdatePage> {
       );
 
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Post shared! ✅')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Post shared! ✅')));
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -305,6 +428,7 @@ class _PostUpdatePageState extends ConsumerState<PostUpdatePage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       body: Column(
         children: [
@@ -329,7 +453,7 @@ class _PostUpdatePageState extends ConsumerState<PostUpdatePage> {
                   child: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.25),
+                      color: Colors.white.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(Icons.arrow_back, color: Colors.white),
@@ -358,24 +482,23 @@ class _PostUpdatePageState extends ConsumerState<PostUpdatePage> {
               ],
             ),
           ),
-
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Image picker
                   GestureDetector(
                     onTap: _pickImage,
                     child: Container(
                       width: double.infinity,
                       height: 180,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF5F7FF),
+                        color: isDark ? const Color(0xFF1E2530) : const Color(0xFFF5F7FF),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: const Color(0xFF8EC5FC).withOpacity(0.4),
+                          color:
+                              const Color(0xFF8EC5FC).withValues(alpha: 0.4),
                           width: 2,
                         ),
                       ),
@@ -387,56 +510,53 @@ class _PostUpdatePageState extends ConsumerState<PostUpdatePage> {
                                 fit: BoxFit.cover,
                               ),
                             )
-                          : const Column(
+                          : Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(
+                                const Icon(
                                   Icons.add_photo_alternate_outlined,
                                   size: 40,
                                   color: Color(0xFF8EC5FC),
                                 ),
-                                SizedBox(height: 8),
+                                const SizedBox(height: 8),
                                 Text(
                                   'Tap to add photo (optional)',
-                                  style: TextStyle(color: Colors.black45),
+                                  style: TextStyle(color: isDark ? Colors.white38 : Colors.black45),
                                 ),
                               ],
                             ),
                     ),
                   ),
-
                   const SizedBox(height: 16),
-
                   const Text(
                     'Caption *',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                    style:
+                        TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                   ),
                   const SizedBox(height: 8),
                   Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF5F7FF),
+                      color: isDark ? const Color(0xFF1E2530) : const Color(0xFFF5F7FF),
                       borderRadius: BorderRadius.circular(14),
                       boxShadow: const [
-                        BoxShadow(color: Colors.black12, blurRadius: 4),
+                        BoxShadow(color: Colors.black12, blurRadius: 4)
                       ],
                     ),
                     child: TextField(
                       controller: _captionController,
                       maxLines: 5,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         hintText: 'What\'s on your mind?',
                         hintStyle: TextStyle(
-                          color: Colors.black38,
+                          color: isDark ? Colors.white38 : Colors.black38,
                           fontSize: 13,
                         ),
                         border: InputBorder.none,
-                        contentPadding: EdgeInsets.all(14),
+                        contentPadding: const EdgeInsets.all(14),
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 24),
-
                   SizedBox(
                     width: double.infinity,
                     child: Container(
@@ -450,7 +570,8 @@ class _PostUpdatePageState extends ConsumerState<PostUpdatePage> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.transparent,
                           shadowColor: Colors.transparent,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          padding:
+                              const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),

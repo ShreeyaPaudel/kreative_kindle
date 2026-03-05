@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sensors_plus/sensors_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:kreative_kindle/features/activities/presentation/pages/activities_page.dart';
 import 'package:kreative_kindle/features/activities/presentation/pages/activity_detail_page.dart';
 import '../widgets/feature_tile.dart';
@@ -25,6 +26,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   int index = 2;
   StreamSubscription<AccelerometerEvent>? _shakeSub;
   DateTime _lastShake = DateTime.now();
+
+  String? _profileImageUrl;
+  String _userName = '';
 
   bool get isParent => widget.role.toLowerCase() == "parent";
 
@@ -71,6 +75,16 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   void initState() {
     super.initState();
     _startShakeListener();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _profileImageUrl = prefs.getString('profile_image_url');
+      _userName = prefs.getString('user_name') ?? '';
+    });
   }
 
   @override
@@ -135,7 +149,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     ];
 
     return Scaffold(
-      backgroundColor: Colors.white,
       body: Column(
         children: [
           const OfflineBanner(),
@@ -154,9 +167,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         ),
         child: BottomNavigationBar(
           currentIndex: index,
-          onTap: (i) => setState(() => index = i),
+          onTap: (i) {
+            setState(() => index = i);
+            if (i == 2) _loadUserData();
+          },
           type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.white,
           selectedItemColor: const Color(0xFF8EC5FC),
           unselectedItemColor: Colors.grey.shade400,
           items: const [
@@ -184,12 +199,29 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   }
 
   Widget _homeUi() {
-    final greeting = isParent ? "Hi Parent!" : "Hi Instructor!";
+    final name    = _userName.isNotEmpty ? _userName.split(' ').first : (isParent ? 'Parent' : 'Instructor');
+    final greeting = 'Hi, $name! 👋';
+    final isDark    = Theme.of(context).brightness == Brightness.dark;
+    final hintBg    = isDark ? const Color(0xFF1A2035) : const Color(0xFFF0F4FF);
+    final hintText  = isDark ? Colors.white60 : Colors.black54;
+    final hlBg      = isDark ? const Color(0xFF1E2530) : const Color(0xFFFFF4E8);
+    final subColor  = isDark ? Colors.white54 : Colors.black54;
+
+    void goToActivity(String title, String emoji, String duration, String cat) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ActivityDetailPage(
+            title: title, emoji: emoji, duration: duration, category: cat,
+          ),
+        ),
+      );
+    }
 
     return SingleChildScrollView(
       child: Column(
         children: [
-          // Header
+          // ── Header ──────────────────────────────────────────────
           Stack(
             children: [
               Container(
@@ -225,40 +257,58 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          greeting,
-                          style: const TextStyle(
-                            fontSize: 22,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            greeting,
+                            style: const TextStyle(
+                              fontSize: 22,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          "4 Y/O | Beginner",
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14,
+                          const SizedBox(height: 4),
+                          const Text(
+                            "Ready to explore today? ✨",
+                            style: TextStyle(color: Colors.white70, fontSize: 13),
                           ),
-                        ),
-                      ],
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(color: Colors.black26, blurRadius: 6),
                         ],
                       ),
-                      child: const Icon(
-                        Icons.person,
-                        color: Colors.black54,
-                        size: 34,
+                    ),
+                    const SizedBox(width: 12),
+                    GestureDetector(
+                      onTap: () => setState(() => index = 3),
+                      child: Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white,
+                          boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6)],
+                          image: _profileImageUrl != null
+                              ? DecorationImage(
+                                  image: NetworkImage(_profileImageUrl!),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
+                        ),
+                        child: _profileImageUrl == null
+                            ? Center(
+                                child: Text(
+                                  _userName.isNotEmpty
+                                      ? _userName[0].toUpperCase()
+                                      : (isParent ? 'P' : 'I'),
+                                  style: const TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF8EC5FC),
+                                  ),
+                                ),
+                              )
+                            : null,
                       ),
                     ),
                   ],
@@ -269,25 +319,25 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
 
           const SizedBox(height: 20),
 
-          // Shake hint banner
+          // ── Shake hint banner ────────────────────────────────────
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 20),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: const Color(0xFFF0F4FF),
+              color: hintBg,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: const Color(0xFF8EC5FC).withValues(alpha: 0.4),
               ),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.vibration, color: Color(0xFF8EC5FC), size: 22),
-                SizedBox(width: 10),
+                const Icon(Icons.vibration, color: Color(0xFF8EC5FC), size: 22),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     '🎲 Shake your phone to get a random activity suggestion!',
-                    style: TextStyle(fontSize: 13, color: Colors.black54),
+                    style: TextStyle(fontSize: 13, color: hintText),
                   ),
                 ),
               ],
@@ -296,58 +346,54 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
 
           const SizedBox(height: 20),
 
-          // Today's highlight
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20),
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF4E8),
-              borderRadius: BorderRadius.circular(18),
-              boxShadow: const [
-                BoxShadow(color: Colors.black12, blurRadius: 6),
-              ],
+          // ── Today's Highlight ────────────────────────────────────
+          GestureDetector(
+            onTap: () => goToActivity(
+              'Rainbow Paper Craft', '🌈', '10 mins', 'Craft Corner',
             ),
-            child: const Row(
-              children: [
-                Text("🌈", style: TextStyle(fontSize: 42)),
-                SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Today's Highlight",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: hlBg,
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)],
+              ),
+              child: Row(
+                children: [
+                  const Text("🌈", style: TextStyle(fontSize: 42)),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Today's Highlight",
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                         ),
-                      ),
-                      SizedBox(height: 4),
-                      Text("Rainbow Paper Craft"),
-                      SizedBox(height: 6),
-                      Row(
-                        children: [
-                          Icon(Icons.timer, size: 16, color: Colors.black54),
-                          SizedBox(width: 4),
-                          Text(
-                            "10 mins",
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.black54,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                        const SizedBox(height: 4),
+                        const Text("Rainbow Paper Craft"),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Icon(Icons.timer, size: 16, color: subColor),
+                            const SizedBox(width: 4),
+                            Text("10 mins",
+                                style: TextStyle(fontSize: 12, color: subColor)),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                  Icon(Icons.chevron_right, color: subColor),
+                ],
+              ),
             ),
           ),
 
           const SizedBox(height: 25),
 
-          // Feature grid
+          // ── Feature grid ─────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: GridView.count(
@@ -361,89 +407,56 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 FeatureTile(
                   title: "Craft Corner",
                   icon: Icons.palette,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          const ActivitiesPage(category: 'Craft Corner'),
-                    ),
-                  ),
+                  onTap: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const ActivitiesPage(category: 'Craft Corner'))),
                 ),
                 FeatureTile(
                   title: "Letters & Phonics",
                   icon: Icons.text_fields,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          const ActivitiesPage(category: 'Letters & Phonics'),
-                    ),
-                  ),
+                  onTap: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const ActivitiesPage(category: 'Letters & Phonics'))),
                 ),
                 FeatureTile(
                   title: "Story Time",
                   icon: Icons.book,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          const ActivitiesPage(category: 'Story Time'),
-                    ),
-                  ),
+                  onTap: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const ActivitiesPage(category: 'Story Time'))),
                 ),
                 FeatureTile(
                   title: "Numbers & Logic",
                   icon: Icons.calculate,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          const ActivitiesPage(category: 'Numbers & Logic'),
-                    ),
-                  ),
+                  onTap: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const ActivitiesPage(category: 'Numbers & Logic'))),
                 ),
                 FeatureTile(
                   title: "Thinking Skills",
                   icon: Icons.psychology,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          const ActivitiesPage(category: 'Thinking Skills'),
-                    ),
-                  ),
+                  onTap: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const ActivitiesPage(category: 'Thinking Skills'))),
                 ),
                 FeatureTile(
                   title: "Science & Nature",
                   icon: Icons.eco,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          const ActivitiesPage(category: 'Science & Nature'),
-                    ),
-                  ),
+                  onTap: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const ActivitiesPage(category: 'Science & Nature'))),
                 ),
                 FeatureTile(
                   title: "Post Update",
                   icon: Icons.post_add,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const PostUpdatePage()),
-                  ),
+                  onTap: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const PostUpdatePage())),
                 ),
                 FeatureTile(
                   title: "Learning Progress",
                   icon: Icons.show_chart,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const ProgressPage()),
-                  ),
+                  onTap: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const ProgressPage())),
                 ),
                 FeatureTile(
                   title: "Rewards & Badges",
                   icon: Icons.workspace_premium,
-                  onTap: () {},
+                  onTap: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const ProgressPage())),
                 ),
               ],
             ),
@@ -451,47 +464,51 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
 
           const SizedBox(height: 30),
 
-          // Recommended
-          const Align(
-            alignment: Alignment.centerLeft,
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 22),
+          // ── Recommended ──────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 22),
+            child: Align(
+              alignment: Alignment.centerLeft,
               child: Text(
                 "Recommended for You",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
               ),
             ),
           ),
 
           const SizedBox(height: 14),
 
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20),
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [
-                  Color(0xFFFFE8A3),
-                  Color(0xFFFFCFA8),
-                  Color(0xFFFFB88A),
+          GestureDetector(
+            onTap: () => goToActivity(
+              'Shape Sorting Game', '🔷', '15 mins', 'Thinking Skills',
+            ),
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFFE8A3), Color(0xFFFFCFA8), Color(0xFFFFB88A)],
+                ),
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10)],
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.extension, size: 36, color: Color(0xFFFF9A3E)),
+                  const SizedBox(width: 16),
+                  const Expanded(
+                    child: Text(
+                      "Shape Sorting Game\nBoosts thinking + fine motor skills!",
+                      style: TextStyle(fontSize: 14, color: Colors.brown),
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right, color: Color(0xFFFF9A3E)),
                 ],
               ),
-              borderRadius: BorderRadius.circular(18),
-              boxShadow: const [
-                BoxShadow(color: Colors.black12, blurRadius: 10),
-              ],
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.extension, size: 36, color: Color(0xFFFF9A3E)),
-                SizedBox(width: 16),
-                Expanded(
-                  child: Text(
-                    "Shape Sorting Game\nBoosts thinking + fine motor skills!",
-                    style: TextStyle(fontSize: 14),
-                  ),
-                ),
-              ],
             ),
           ),
 
@@ -513,6 +530,9 @@ class _ActivitySuggestionSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark   = Theme.of(context).brightness == Brightness.dark;
+    final subColor = isDark ? Colors.white54 : Colors.black45;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
       child: Column(
@@ -523,15 +543,15 @@ class _ActivitySuggestionSheet extends StatelessWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.grey.shade300,
+              color: Colors.grey.shade400,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
           const SizedBox(height: 20),
 
-          const Text(
+          Text(
             '🎲 Activity Suggestion',
-            style: TextStyle(fontSize: 13, color: Colors.black45),
+            style: TextStyle(fontSize: 13, color: subColor),
           ),
           const SizedBox(height: 8),
 
@@ -552,7 +572,7 @@ class _ActivitySuggestionSheet extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             '${activity['category']} · ${activity['duration']}',
-            style: const TextStyle(color: Colors.black45, fontSize: 13),
+            style: TextStyle(color: subColor, fontSize: 13),
           ),
 
           const SizedBox(height: 24),
