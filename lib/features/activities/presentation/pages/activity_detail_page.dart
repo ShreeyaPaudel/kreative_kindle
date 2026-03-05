@@ -41,6 +41,12 @@ class _ActivityDetailPageState extends ConsumerState<ActivityDetailPage> {
   StreamSubscription<dynamic>? _proxSub;
   Timer? _proxDebounceTimer;
 
+  // ── Countdown timer ────────────────────────────────────────
+  int _timerTotal = 0;
+  int _timerRemaining = 0;
+  bool _timerRunning = false;
+  Timer? _countdownTimer;
+
   int get _activityId => _titleToId[widget.title] ?? widget.title.hashCode.abs() % 1000000;
 
   Map<String, dynamic> get _activityData {
@@ -777,6 +783,41 @@ class _ActivityDetailPageState extends ConsumerState<ActivityDetailPage> {
     super.initState();
     _startGyroscope();
     _startProximity();
+    _timerTotal = _parseDurationSeconds();
+    _timerRemaining = _timerTotal;
+  }
+
+  int _parseDurationSeconds() {
+    final parts = widget.duration.split(' ');
+    return (int.tryParse(parts.first) ?? 10) * 60;
+  }
+
+  String _formatTime(int seconds) {
+    final m = (seconds ~/ 60).toString().padLeft(2, '0');
+    final s = (seconds % 60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
+  void _startTimer() {
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (_timerRemaining <= 1) {
+        _countdownTimer?.cancel();
+        setState(() { _timerRemaining = 0; _timerRunning = false; });
+      } else {
+        setState(() => _timerRemaining--);
+      }
+    });
+    setState(() => _timerRunning = true);
+  }
+
+  void _pauseTimer() {
+    _countdownTimer?.cancel();
+    setState(() => _timerRunning = false);
+  }
+
+  void _resetTimer() {
+    _countdownTimer?.cancel();
+    setState(() { _timerRemaining = _timerTotal; _timerRunning = false; });
   }
 
   void _startGyroscope() {
@@ -857,6 +898,7 @@ class _ActivityDetailPageState extends ConsumerState<ActivityDetailPage> {
     _gyroSub?.cancel();
     _proxSub?.cancel();
     _proxDebounceTimer?.cancel();
+    _countdownTimer?.cancel();
     super.dispose();
   }
 
@@ -940,6 +982,75 @@ class _ActivityDetailPageState extends ConsumerState<ActivityDetailPage> {
                             _statItem(context, Icons.timer, widget.duration, 'Duration'),
                             _statItem(context, Icons.star, data['level'], 'Level'),
                             _statItem(context, Icons.people, data['ageGroup'], 'Age Group'),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // ── Activity Timer ─────────────────────────────
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1E2530) : const Color(0xFFF5F7FF),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)],
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.timer_outlined, size: 16, color: Color(0xFF8EC5FC)),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Activity Timer',
+                                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: isDark ? Colors.white70 : Colors.black87),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              _formatTime(_timerRemaining),
+                              key: const Key('timerDisplay'),
+                              style: TextStyle(
+                                fontSize: 40,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 3,
+                                color: _timerRemaining == 0
+                                    ? const Color(0xFF43E97B)
+                                    : (isDark ? Colors.white : Colors.black87),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: _timerTotal == 0 ? 0 : 1 - (_timerRemaining / _timerTotal),
+                                minHeight: 6,
+                                backgroundColor: isDark ? Colors.white12 : Colors.grey.shade200,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  _timerRemaining == 0 ? const Color(0xFF43E97B) : const Color(0xFF8EC5FC),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                _timerIconButton(
+                                  icon: _timerRunning ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                                  onTap: _timerRemaining == 0 ? null : (_timerRunning ? _pauseTimer : _startTimer),
+                                ),
+                                const SizedBox(width: 12),
+                                _timerIconButton(icon: Icons.refresh_rounded, onTap: _resetTimer),
+                              ],
+                            ),
+                            if (_timerRemaining == 0)
+                              const Padding(
+                                padding: EdgeInsets.only(top: 8),
+                                child: Text('Great job! Activity complete 🎉', style: TextStyle(color: Color(0xFF43E97B), fontWeight: FontWeight.w700, fontSize: 13)),
+                              ),
                           ],
                         ),
                       ),
@@ -1050,6 +1161,24 @@ class _ActivityDetailPageState extends ConsumerState<ActivityDetailPage> {
             ),
           ),
       ],
+    );
+  }
+
+  Widget _timerIconButton({required IconData icon, VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          gradient: onTap != null
+              ? const LinearGradient(colors: [Color(0xFF8EC5FC), Color(0xFFE0C3FC)])
+              : null,
+          color: onTap == null ? Colors.grey.shade300 : null,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: Colors.white, size: 24),
+      ),
     );
   }
 
