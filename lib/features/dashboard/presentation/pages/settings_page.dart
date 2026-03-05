@@ -58,7 +58,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     if (!mounted) return;
     setState(() => _notificationsEnabled = val);
     if (val) {
-      await NotificationService.scheduleDailyReminder();
+      await NotificationService.scheduleDailyReminder(
+        hour: _reminderTime.hour,
+        minute: _reminderTime.minute,
+      );
     } else {
       await NotificationService.cancelAll();
     }
@@ -75,7 +78,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     await prefs.setInt('reminder_hour',   picked.hour);
     await prefs.setInt('reminder_minute', picked.minute);
     setState(() => _reminderTime = picked);
-    await NotificationService.scheduleDailyReminder();
+    await NotificationService.scheduleDailyReminder(
+      hour: picked.hour,
+      minute: picked.minute,
+    );
   }
 
   Future<void> _showEditProfileDialog() async {
