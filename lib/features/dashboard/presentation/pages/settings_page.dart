@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:kreative_kindle/features/auth/presentation/pages/login_screen.dart';
+import 'package:kreative_kindle/core/services/notification_service.dart';
 import '../../../auth/presentation/view_model/auth_viewmodel.dart';
 import '../../../../core/providers/theme_provider.dart';
 
@@ -16,6 +17,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   String _name = '';
   String _email = '';
   String? _userId;
+  bool _notificationsEnabled = false;
+  TimeOfDay _reminderTime = const TimeOfDay(hour: 9, minute: 0);
 
   @override
   void initState() {
@@ -30,7 +33,38 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       _name   = prefs.getString('user_name') ?? '';
       _email  = prefs.getString('user_email') ?? '';
       _userId = prefs.getString('user_id');
+      _notificationsEnabled = prefs.getBool('notifications_enabled') ?? false;
+      _reminderTime = TimeOfDay(
+        hour:   prefs.getInt('reminder_hour')   ?? 9,
+        minute: prefs.getInt('reminder_minute') ?? 0,
+      );
     });
+  }
+
+  Future<void> _toggleNotifications(bool val) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('notifications_enabled', val);
+    if (!mounted) return;
+    setState(() => _notificationsEnabled = val);
+    if (val) {
+      await NotificationService.scheduleDailyReminder();
+    } else {
+      await NotificationService.cancelAll();
+    }
+  }
+
+  Future<void> _pickReminderTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _reminderTime,
+      helpText: 'Set daily reminder time',
+    );
+    if (picked == null || !mounted) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('reminder_hour',   picked.hour);
+    await prefs.setInt('reminder_minute', picked.minute);
+    setState(() => _reminderTime = picked);
+    await NotificationService.scheduleDailyReminder();
   }
 
   Future<void> _showEditProfileDialog() async {
@@ -196,21 +230,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                       showDiv: true,
                       onTap: _showEditProfileDialog,
                     ),
-                    _row(
-                      icon: Icons.notifications_outlined,
-                      iconBg: const Color(0xFFFFF3E0),
-                      iconColor: const Color(0xFFFF9800),
-                      title: 'Notifications',
-                      subtitle: 'Coming in a future update',
-                      subColor: subColor,
-                      divColor: divColor,
-                      showDiv: false,
-                      onTap: () => _showInfoDialog(
-                        'Notifications',
-                        Icons.notifications_outlined,
-                        'Push notification settings will be available in a future update. You\'ll be able to set reminders for daily activities and receive updates from the community.',
-                      ),
-                    ),
+                    _buildNotificationRow(subColor, divColor, isDark),
                   ]),
 
                   const SizedBox(height: 20),
@@ -478,6 +498,66 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildNotificationRow(Color subColor, Color divColor, bool isDark) {
+    final timeStr = _reminderTime.format(context);
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: Row(
+            children: [
+              Container(
+                width: 42, height: 42,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF3E0),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.notifications_outlined, color: Color(0xFFFF9800), size: 20),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Notifications', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: isDark ? Colors.white : Colors.black87)),
+                    Text(
+                      _notificationsEnabled ? 'Daily reminder at $timeStr' : 'Off',
+                      style: TextStyle(fontSize: 12, color: subColor),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: _notificationsEnabled,
+                onChanged: _toggleNotifications,
+                activeThumbColor: Colors.white,
+                activeTrackColor: const Color(0xFFFF9800),
+              ),
+            ],
+          ),
+        ),
+        if (_notificationsEnabled) ...[
+          Divider(color: divColor, height: 1, indent: 72),
+          InkWell(
+            onTap: _pickReminderTime,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(72, 10, 16, 10),
+              child: Row(
+                children: [
+                  const Icon(Icons.access_time, size: 16, color: Color(0xFFFF9800)),
+                  const SizedBox(width: 8),
+                  Text('Remind me at $timeStr', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                  const Spacer(),
+                  const Icon(Icons.chevron_right_rounded, size: 18, color: Colors.grey),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 
