@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "911031020815",
+    "project_id": "kreativekindle-b12e2",
+    "storage_bucket": "kreativekindle-b12e2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:911031020815:android:9f52996d217311fe4ae27a",
+        "android_client_info": {
+          "package_name": "com.example.kreative_kindle"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "911031020815-mr7nl4m5lp1cbqfmlfpogjftba9i11jt.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.kreative_kindle",
+            "certificate_hash": "e9c7590b97ff9dc41272def4f10cf79df0a2babe"
+          }
+        },
+        {
+          "client_id": "911031020815-cqe289klh2micbi09jrtae5tn049b8h8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAn_gVKqB8ECu45CnuI3g4imgF_Qise5vY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "911031020815-cqe289klh2micbi09jrtae5tn049b8h8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
