@@ -1,0 +1,116 @@
+00:00 +0: loading C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/activity_search_widget_test.dart
+00:00 +0: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/activity_search_widget_test.dart: PASS: search bar renders with hint text
+00:00 +1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/activity_sheet_test.dart: PASS: activity sheet shows emoji, title and category
+00:00 +2: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/activity_timer_widget_test.dart: PASS: timer renders formatted time correctly
+00:00 +3: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/activity_timer_widget_test.dart: PASS: timer renders formatted time correctly
+00:00 +4: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/activity_timer_widget_test.dart: PASS: timer renders formatted time correctly
+00:01 +5: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/dark_mode_toggle_test.dart: PASS: dark mode switch is OFF in light mode
+00:01 +6: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/dark_mode_toggle_test.dart: PASS: dark mode switch is OFF in light mode
+00:01 +7: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/dark_mode_toggle_test.dart: PASS: dark mode switch is OFF in light mode
+00:01 +8: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/dark_mode_toggle_test.dart: PASS: dark mode switch is OFF in light mode
+00:01 +9: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/dark_mode_toggle_test.dart: PASS: dark mode switch is OFF in light mode
+00:01 +10: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/feature_tile_test.dart: PASS: feature tile renders icon
+00:01 +11: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/feature_tile_test.dart: PASS: feature tile renders icon
+00:01 +12: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/loading_button_pass_test.dart: PASS: shows loader when loading
+00:01 +13: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/loading_button_pass_test.dart: PASS: shows loader when loading
+00:01 +14: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/login_screen_pass_test.dart: PASS: login screen renders fields + button
+00:01 +15: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/login_screen_pass_test.dart: PASS: login screen renders fields + button
+00:01 +16: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/login_screen_pass_test.dart: PASS: login screen renders fields + button
+00:02 +17: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/navigation_test.dart: FAIL: navigation throws when route not registered
+00:02 +18: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/navigation_test.dart: FAIL: navigation throws when route not registered
+00:02 +19: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/navigation_test.dart: FAIL: navigation throws when route not registered
+00:02 +20: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/navigation_test.dart: FAIL: navigation throws when route not registered
+══╡ EXCEPTION CAUGHT BY GESTURE ╞═══════════════════════════════════════════════════════════════════
+The following assertion was thrown while handling a gesture:
+Navigator operation requested with a context that does not include a Navigator.
+The context used to push or pop routes from the Navigator must be that of a widget that is a
+descendant of a Navigator widget.
+
+When the exception was thrown, this was the stack:
+#0      Navigator.of.<anonymous closure> (package:flutter/src/widgets/navigator.dart:2910:9)
+#1      Navigator.of (package:flutter/src/widgets/navigator.dart:2917:6)
+#2      Navigator.pushNamed (package:flutter/src/widgets/navigator.dart:1905:22)
+#3      LoginNavDummy.build.<anonymous closure> (file:///C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/navigation_test.dart:13:38)
+#4      _InkResponseState.handleTap (package:flutter/src/material/ink_well.dart:1222:21)
+#5      GestureRecognizer.invokeCallback (package:flutter/src/gestures/recognizer.dart:345:24)
+#6      TapGestureRecognizer.handleTapUp (package:flutter/src/gestures/tap.dart:758:11)
+#7      BaseTapGestureRecognizer._checkUp (package:flutter/src/gestures/tap.dart:383:5)
+#8      BaseTapGestureRecognizer.handlePrimaryPointer (package:flutter/src/gestures/tap.dart:314:7)
+#9      PrimaryPointerGestureRecognizer.handleEvent (package:flutter/src/gestures/recognizer.dart:721:9)
+#10     PointerRouter._dispatch (package:flutter/src/gestures/pointer_router.dart:97:12)
+#11     PointerRouter._dispatchEventToRoutes.<anonymous closure> (package:flutter/src/gestures/pointer_router.dart:142:9)
+#12     _LinkedHashMapMixin.forEach (dart:_compact_hash:765:13)
+#13     PointerRouter._dispatchEventToRoutes (package:flutter/src/gestures/pointer_router.dart:140:18)
+#14     PointerRouter.route (package:flutter/src/gestures/pointer_router.dart:130:7)
+#15     GestureBinding.handleEvent (package:flutter/src/gestures/binding.dart:528:19)
+#16     GestureBinding.dispatchEvent (package:flutter/src/gestures/binding.dart:498:22)
+#17     RendererBinding.dispatchEvent (package:flutter/src/rendering/binding.dart:473:11)
+#18     GestureBinding._handlePointerEventImmediately (package:flutter/src/gestures/binding.dart:437:7)
+#19     GestureBinding.handlePointerEvent (package:flutter/src/gestures/binding.dart:394:5)
+#20     TestWidgetsFlutterBinding.handlePointerEventForSource.<anonymous closure> (package:flutter_test/src/binding.dart:678:42)
+#21     TestWidgetsFlutterBinding.withPointerEventSource (package:flutter_test/src/binding.dart:688:11)
+#22     TestWidgetsFlutterBinding.handlePointerEventForSource (package:flutter_test/src/binding.dart:678:5)
+#23     WidgetTester.sendEventToBinding.<anonymous closure> (package:flutter_test/src/widget_tester.dart:869:15)
+#26     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#27     WidgetTester.sendEventToBinding (package:flutter_test/src/widget_tester.dart:868:27)
+#28     TestGesture.up.<anonymous closure> (package:flutter_test/src/test_pointer.dart:538:26)
+#31     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#32     TestGesture.up (package:flutter_test/src/test_pointer.dart:531:27)
+#33     WidgetController.tapAt.<anonymous closure> (package:flutter_test/src/controller.dart:1117:21)
+<asynchronous suspension>
+#34     TestAsyncUtils.guard.<anonymous closure> (package:flutter_test/src/test_async_utils.dart:130:27)
+<asynchronous suspension>
+#35     main.<anonymous closure> (file:///C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/navigation_test.dart:27:5)
+<asynchronous suspension>
+#36     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#37     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1059:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 5 frames from dart:async and package:stack_trace)
+
+Handler: "onTap"
+Recognizer:
+  TapGestureRecognizer#3e53c
+════════════════════════════════════════════════════════════════════════════════════════════════════
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: exactly one matching candidate
+  Actual: _TextWidgetFinder:<Found 0 widgets with text "HOME_SCREEN": []>
+   Which: means none were found but one was expected
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/navigation_test.dart:31:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1059:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/navigation_test.dart line 31
+The test description was:
+  FAIL: navigation throws when route not registered
+════════════════════════════════════════════════════════════════════════════════════════════════════
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following message was thrown:
+Multiple exceptions (2) were detected during the running of the current test, and at least one was
+unexpected.
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:02 +20 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/progress_bar_test.dart: PASS: progress bar renders with label
+00:02 +20 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/navigation_test.dart: FAIL: navigation throws when route not registered [E]
+  Test failed. See exception logs above.
+  The test description was: FAIL: navigation throws when route not registered
+  
+00:02 +21 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/progress_bar_test.dart: PASS: progress bar renders with label
+00:02 +22 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/settings_row_test.dart: PASS: settings row renders label
+00:02 +23 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/settings_row_test.dart: PASS: settings row renders label
+00:03 +24 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/signup_screen_pass_test.dart: PASS: signup screen renders fields + button
+00:03 +25 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/signup_screen_pass_test.dart: PASS: signup screen renders fields + button
+00:03 +26 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/signup_screen_pass_test.dart: PASS: signup screen renders fields + button
+00:03 +27 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/snackbar_pass_test.dart: PASS: shows snackbar on tap
+00:03 +28 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/snackbar_pass_test.dart: PASS: shows snackbar on tap
+00:03 +29 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/widget/signup_screen_pass_test.dart: PASS: typing password into signup password field works
+00:03 +30 -1: Some tests failed.
