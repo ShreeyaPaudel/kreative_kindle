@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/api/api_endpoints.dart';
 import '../../../../features/auth/data/repositories/user_repository.dart';
 import '../../../../features/auth/presentation/view_model/auth_viewmodel.dart';
 import '../../../../features/children/presentation/pages/children_page.dart';
@@ -67,7 +68,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     if (mediaState.imageUrl != null) {
       final fullUrl = mediaState.imageUrl!.startsWith('http')
           ? mediaState.imageUrl!
-          : 'http://192.168.1.115:3001/uploads/${mediaState.imageUrl!}';
+          : '${ApiEndpoints.serverBase}/uploads/${mediaState.imageUrl!}';
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('profile_image_url', fullUrl);
       if (mounted) setState(() => _savedImageUrl = fullUrl);
