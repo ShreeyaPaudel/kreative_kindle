@@ -1,8 +1,20 @@
 class ApiEndpoints {
   ApiEndpoints._();
 
-  // Physical device — WiFi IP (change if your network IP differs)
-  static const String baseUrl = 'http://192.168.1.115:3001/api';
+  // Android emulator → 10.0.2.2 maps to host machine localhost
+  // Physical device  → use your WiFi IP e.g. http://192.168.1.115:3001/api
+  static const String baseUrl = 'http://10.0.2.2:3001/api'; //Emmulator
+
+  // static const String baseUrl = 'http://192.168.1.115:3001/api'; //Physical device
+
+
+  /// Base URL without /api — used for constructing media/upload URLs.
+  /// Automatically follows baseUrl so switching emulator ↔ physical device
+  /// only requires changing baseUrl above.
+  static String get serverBase {
+    final uri = Uri.parse(baseUrl);
+    return '${uri.scheme}://${uri.host}:${uri.port}';
+  }
 
   static const Duration connectionTimeout = Duration(seconds: 30);
   static const Duration receiveTimeout    = Duration(seconds: 30);

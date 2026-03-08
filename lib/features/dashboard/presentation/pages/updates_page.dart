@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/api/api_client.dart';
+import '../../../../core/api/api_endpoints.dart';
 import '../../../../features/auth/data/repositories/user_repository.dart';
 import '../../../../features/media/presentation/view_model/media_viewmodel.dart';
 
@@ -216,7 +217,7 @@ class _PostCardState extends ConsumerState<_PostCard> {
     final caption = post['caption']?.toString() ?? '';
     final rawImage = post['image']?.toString() ?? '';
     final imageUrl = rawImage.isNotEmpty && !rawImage.startsWith('http')
-        ? 'http://192.168.1.115:3001/uploads/$rawImage'
+        ? '${ApiEndpoints.serverBase}/uploads/$rawImage'
         : rawImage;
     final userObj = post['userId'];
     // username may be stored directly on the post or inside a populated userId object
