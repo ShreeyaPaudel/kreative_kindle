@@ -1,0 +1,61 @@
+00:00 +0: loading C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/activity_filter_test.dart
+00:00 +0: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/activity_filter_test.dart: Activity search filter PASS: empty query returns all activities
+00:00 +1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/activity_filter_test.dart: Activity search filter PASS: query "paper" matches two activities
+00:00 +2: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/activity_filter_test.dart: Activity search filter PASS: query is case-insensitive
+00:00 +3: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/activity_filter_test.dart: Activity search filter PASS: non-matching query returns empty list
+00:00 +4: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/api_endpoints_test.dart: ApiEndpoints.baseUrl is not empty
+00:00 +5: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/api_endpoints_test.dart: ApiEndpoints.baseUrl contains /api/v1
+00:00 +6: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/auth_api_model_test.dart: AuthApiModel toLoginJson contains email and password keys only
+00:00 +7: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/auth_api_model_test.dart: AuthApiModel toRegisterJson maps fullName to username key
+00:00 +8: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/auth_api_model_test.dart: AuthApiModel fromJson parses token and email from response
+00:00 +9: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/auth_api_model_test.dart: AuthApiModel fromJson sets password to empty string for security
+00:00 +10: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/auth_repo_test.dart: AuthRepository.login returns token on success
+00:00 +11: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/auth_repo_test.dart: AuthRepository.register completes on success
+00:00 +12: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/auth_validation_fail_test.dart: FAIL: login should reject weak password
+00:00 +12 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/auth_validation_fail_test.dart: FAIL: login should reject weak password [E]
+  Expected: <true>
+    Actual: <false>
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test\unit\auth_validation_fail_test.dart 12:5       main.<fn>
+  
+00:01 +12 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/auth_viewmodel_state_test.dart: (setUpAll)
+00:01 +12 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/auth_viewmodel_state_test.dart: AuthState PASS: default state — isLoading false, no token, no error
+00:01 +13 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/auth_viewmodel_state_test.dart: AuthState PASS: copyWith(isLoading: true) sets loading, preserves token
+00:01 +14 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/auth_viewmodel_state_test.dart: AuthState PASS: copyWith(error: msg) stores error message
+00:01 +15 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/auth_viewmodel_state_test.dart: AuthState PASS: copyWith(token: jwt) stores token in new state
+00:02 +16 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/auth_viewmodel_state_test.dart: AuthState PASS: copyWith with null error clears a previously set error
+00:02 +17 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/auth_viewmodel_state_test.dart: AuthViewModel state PASS: initial state is unauthenticated (token=null, loading=false)
+00:02 +18 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/auth_viewmodel_state_test.dart: AuthViewModel state PASS: login success stores token and clears loading
+00:02 +19 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/auth_viewmodel_state_test.dart: AuthViewModel state PASS: login failure sets error and clears loading
+00:02 +20 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/auth_viewmodel_state_test.dart: AuthViewModel state PASS: signup success returns to idle state (no error)
+00:02 +21 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/auth_viewmodel_state_test.dart: AuthViewModel state PASS: signup failure sets error and clears loading
+00:02 +22 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/auth_viewmodel_state_test.dart: AuthViewModel state PASS: forgotPassword success clears loading with no error
+00:02 +23 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/auth_viewmodel_state_test.dart: (tearDownAll)
+00:02 +23 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/dto_test.dart: LoginDTO valid when email+password ok
+00:02 +24 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/dto_test.dart: LoginDTO invalid when password too short
+00:02 +25 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/duration_parser_test.dart: Duration parser PASS: parses "10 mins" as 600 seconds
+00:02 +26 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/duration_parser_test.dart: Duration parser PASS: parses "25 mins" as 1500 seconds
+00:02 +27 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/duration_parser_test.dart: Duration parser PASS: formatTime formats 600 seconds as "10:00"
+00:02 +28 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/duration_parser_test.dart: Duration parser PASS: formatTime formats 65 seconds as "01:05"
+00:02 +29 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/theme_provider_unit_test.dart: ThemeNotifier initial state is false (light mode) before async load
+00:02 +30 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/theme_provider_unit_test.dart: ThemeNotifier setTheme(true) switches state to dark mode
+00:02 +31 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/theme_provider_unit_test.dart: ThemeNotifier setTheme with same value is a no-op
+00:02 +32 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/token_service_test.dart: TokenService saveToken called with correct token
+00:02 +33 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/token_service_test.dart: TokenService getToken returns token
+00:02 +34 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/use_cases_test.dart: LoginUseCase PASS: returns true when repository.login succeeds
+00:02 +35 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/use_cases_test.dart: LoginUseCase PASS: returns false when repository.login returns false
+00:02 +36 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/use_cases_test.dart: LoginUseCase PASS: delegates email and password to repository unchanged
+00:02 +37 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/use_cases_test.dart: LoginUseCase PASS: propagates exception thrown by repository
+00:02 +38 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/use_cases_test.dart: LoginUseCase PASS: calls repository exactly once per login invocation
+00:02 +39 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/use_cases_test.dart: SignupUseCase PASS: completes without error when repository succeeds
+00:02 +40 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/use_cases_test.dart: SignupUseCase PASS: delegates email and password to repository unchanged
+00:02 +41 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/use_cases_test.dart: SignupUseCase PASS: propagates exception from repository
+00:02 +42 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/use_cases_test.dart: SignupUseCase PASS: calls repository exactly once per signup attempt
+00:02 +43 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/use_cases_test.dart: SignupUseCase PASS: two sequential calls each delegate to repository independently
+00:03 +44 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/validators_test.dart: Validators Valid email passes
+00:03 +45 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/validators_test.dart: Validators Invalid email fails
+00:03 +46 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/validators_test.dart: Validators Password length < 6 fails
+00:03 +47 -1: C:/Users/TUF/Documents/Developers/Flutter/kreative_kindle/test/unit/validators_test.dart: Validators Password length >= 6 passes
+00:03 +48 -1: Some tests failed.
