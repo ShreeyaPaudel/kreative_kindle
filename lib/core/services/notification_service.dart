@@ -22,7 +22,6 @@ class NotificationService {
   );
 
   static Future<void> init() async {
-    // Load all timezone data and set device local timezone
     tz.initializeTimeZones();
     final tzInfo = await FlutterTimezone.getLocalTimezone();
     tz.setLocalLocation(tz.getLocation(tzInfo.identifier));
@@ -42,14 +41,11 @@ class NotificationService {
     );
   }
 
-  /// Request POST_NOTIFICATIONS permission (required on Android 13+).
   static Future<bool> requestPermission() async {
     final granted = await _androidPlugin?.requestNotificationsPermission();
     return granted ?? true;
   }
 
-  /// Schedule a daily notification at [hour]:[minute] in the device's local timezone.
-  /// Also fires an immediate confirmation notification.
   static Future<void> scheduleDailyReminder({
     int hour = 9,
     int minute = 0,
@@ -57,7 +53,6 @@ class NotificationService {
     final h = hour.toString().padLeft(2, '0');
     final m = minute.toString().padLeft(2, '0');
 
-    // Immediate confirmation so the user sees it right away
     await _plugin.show(
       1,
       'Reminder set! 🔔',
@@ -65,10 +60,7 @@ class NotificationService {
       _details,
     );
 
-    // Cancel any existing daily notification
     await _plugin.cancel(0);
-
-    // Schedule at the exact time every day
     await _plugin.zonedSchedule(
       0,
       'Time to Learn! 🌟',
@@ -82,7 +74,6 @@ class NotificationService {
     );
   }
 
-  /// Returns the next TZDateTime matching [hour]:[minute] in local time.
   static tz.TZDateTime _nextInstanceOfTime(int hour, int minute) {
     final now = tz.TZDateTime.now(tz.local);
     var scheduled =

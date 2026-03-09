@@ -3,7 +3,6 @@ import 'package:riverpod/legacy.dart';
 import '../../data/models/child_model.dart';
 import '../../data/repositories/child_repository.dart';
 
-// ── State ────────────────────────────────────────────────────────
 class ChildState {
   final List<ChildModel> children;
   final bool isLoading;
@@ -26,13 +25,11 @@ class ChildState {
   );
 }
 
-// ── Provider ─────────────────────────────────────────────────────
 final childViewModelProvider =
     StateNotifierProvider<ChildViewModel, ChildState>((ref) {
   return ChildViewModel(ref.read(childRepositoryProvider));
 });
 
-// ── ViewModel ────────────────────────────────────────────────────
 class ChildViewModel extends StateNotifier<ChildState> {
   final ChildRepository _repo;
 

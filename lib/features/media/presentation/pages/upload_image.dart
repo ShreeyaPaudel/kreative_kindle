@@ -34,7 +34,6 @@ class _UploadImagePageState extends ConsumerState<UploadImagePage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // ✅ Header (match your dashboard theme)
             Container(
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(20, 52, 20, 18),
@@ -94,7 +93,6 @@ class _UploadImagePageState extends ConsumerState<UploadImagePage> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 children: [
-                  // ✅ Preview Card
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(14),
@@ -165,7 +163,6 @@ class _UploadImagePageState extends ConsumerState<UploadImagePage> {
 
                         const SizedBox(height: 10),
 
-                        // ✅ Upload Button (gradient like login)
                         SizedBox(
                           width: double.infinity,
                           child: Container(
@@ -252,7 +249,6 @@ class _UploadImagePageState extends ConsumerState<UploadImagePage> {
 
                   const SizedBox(height: 18),
 
-                  // ✅ Server Image Card
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(14),

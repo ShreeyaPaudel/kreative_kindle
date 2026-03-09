@@ -15,7 +15,6 @@ class AuthRemoteDatasource {
 
   AuthRemoteDatasource(this._dio);
 
-  // REGISTER — backend expects { username, email, password }
   Future<void> register(AuthApiModel model) async {
     await _dio.post(
       ApiEndpoints.register,
@@ -27,7 +26,6 @@ class AuthRemoteDatasource {
     );
   }
 
-  // LOGIN
   Future<Map<String, dynamic>> login({
     required String email,
     required String password,
@@ -56,12 +54,10 @@ class AuthRemoteDatasource {
     };
   }
 
-  // FORGOT PASSWORD
   Future<void> forgotPassword(String email) async {
     await _dio.post(ApiEndpoints.forgotPassword, data: {'email': email});
   }
 
-  // RESET PASSWORD — backend expects { token, password }
   Future<void> resetPassword({
     required String token,
     required String newPassword,
@@ -72,7 +68,6 @@ class AuthRemoteDatasource {
     );
   }
 
-  // GOOGLE SIGN-IN (mobile) — sends idToken to POST /api/auth/google/token
   Future<Map<String, dynamic>> loginWithGoogle(String idToken) async {
     final response = await _dio.post(
       ApiEndpoints.googleMobileAuth,
@@ -86,7 +81,6 @@ class AuthRemoteDatasource {
     return <String, dynamic>{'token': token, 'role': role, 'userId': userId};
   }
 
-  // UPDATE PROFILE — PUT /api/auth/:id
   Future<Map<String, dynamic>> updateProfile({
     required String userId,
     String? username,

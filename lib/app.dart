@@ -26,9 +26,6 @@ class _KreativeKindleAppState extends ConsumerState<KreativeKindleApp>
     super.dispose();
   }
 
-  /// Fires whenever the device switches Night Mode / Dark Mode on or off.
-  /// This is the "ambient light / bedtime sensor" use case — the app
-  /// automatically switches to its dark theme when the device does.
   @override
   void didChangePlatformBrightness() {
     final brightness =

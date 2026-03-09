@@ -14,10 +14,8 @@ class ThemeNotifier extends StateNotifier<bool> {
   Future<void> _loadTheme() async {
     final prefs = await SharedPreferences.getInstance();
     if (prefs.containsKey('isDarkMode')) {
-      // Respect user's saved preference
       state = prefs.getBool('isDarkMode')!;
     } else {
-      // First launch: sync with device system theme
       final brightness =
           WidgetsBinding.instance.platformDispatcher.platformBrightness;
       state = brightness == Brightness.dark;
@@ -31,7 +29,6 @@ class ThemeNotifier extends StateNotifier<bool> {
     await prefs.setBool('isDarkMode', state);
   }
 
-  /// Called by the platform-brightness observer to sync theme automatically.
   Future<void> setTheme(bool isDark) async {
     if (state == isDark) return;
     state = isDark;
